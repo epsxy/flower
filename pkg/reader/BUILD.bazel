@@ -1,0 +1,24 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "reader",
+    srcs = ["reader.go"],
+    importpath = "github.com/epsxy/flower/pkg/reader",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/global",
+        "//pkg/model",
+        "//pkg/writer",
+    ],
+)
+
+go_test(
+    name = "reader_test",
+    srcs = ["reader_test.go"],
+    embed = [":reader"],
+    deps = [
+        "//pkg/global",
+        "//pkg/model",
+        "@com_github_stretchr_testify//require",
+    ],
+)
