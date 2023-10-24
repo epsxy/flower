@@ -6,6 +6,9 @@ run:
 test:
 	bazel test --test_output=errors //...
 
+docker:
+	docker build . --tag flower:alpha
+
 build:
 	go build -o ./bin/flower main.go
 

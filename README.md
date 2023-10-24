@@ -122,6 +122,18 @@ public.comments }|--|| public.users
 ```
 ![Example output](bin/example.png)
 
+## Docker build/compile
+
+```
+// build container
+docker build . --tag flower:alpha
+// run container
+docker run -it <image_id>
+// build
+// make build-darwin-amd64 TODO?
+// run
+docker exec a7100df87d8b go run main.go -- parse --help
+```
 
 # Licence
 
