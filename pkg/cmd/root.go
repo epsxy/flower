@@ -41,10 +41,11 @@ func Execute(version string) {
 	// setup version
 	root.Version = version
 	// add commands and flags
-	Parse.PersistentFlags().String("input", "", "SQL file to read")
-	Parse.PersistentFlags().String("output", "", "PlantUML file to write")
+	Parse.PersistentFlags().String("input", "", "Path to SQL file to read")
+	Parse.PersistentFlags().String("output", "", "Path to PlantUML file to write (including '.plantuml' extension)")
+	Parse.PersistentFlags().Bool("partition", false, "Split the disconnected data graph into connected data graph, one per file. Default=false")
 	root.AddCommand(Parse)
-	//Release.AddCommand(Major, Minor, Fix)
+
 	root.PersistentFlags().Var(&logLevel, "log-level", "Log level: 'debug', 'info', 'debug' or 'error'")
 	//root.PersistentFlags().Bool("dry-run", false, "enable dry-run mode")
 	//root.PersistentFlags().Bool("verbose", false, "enable verbose mode")

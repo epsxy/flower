@@ -6,8 +6,11 @@ run:
 test:
 	bazel test --test_output=errors //...
 
-docker:
+docker-build:
 	docker build . --tag flower:alpha
+
+docker-run:
+	docker run -it --rm -v $(CURDIR)/bin:/app/bin flower:alpha /bin/bash
 
 build:
 	go build -o ./bin/flower main.go

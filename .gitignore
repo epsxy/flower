@@ -1,6 +1,11 @@
 .DS_Store
 **/.DS_Store
-/bin/out.plantuml
+
+bin/flower
+bin/out.plantuml
+bin/out_*
+
+data/example.sql
 
 .github
 .vscode
@@ -10,5 +15,3 @@ bazel-bin
 bazel-out
 bazel-testlogs
 bazel-flower
-
-data/*.sql

@@ -3,7 +3,6 @@ package reader
 import (
 	"fmt"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/epsxy/flower/pkg/global"
@@ -19,6 +18,7 @@ func Read(data string) *writer.UMLTree {
 	var fks []*model.ForeignKey
 	var pks []*model.PrimaryKey
 	tablesByName := map[string]*model.Table{}
+	linksByTableName := map[string][]*model.EntityLink{}
 
 	// prepare data
 	lines := strings.Split(data, "\n")
@@ -82,10 +82,8 @@ func Read(data string) *writer.UMLTree {
 	links := map[string]*model.EntityLink{}
 	// Create links
 	for _, fk := range fks {
-		// we compte the id; unique whatever the link direction ( -> or <- )
-		idArr := []string{fk.SourceTable, fk.DestinationTable}
-		sort.Strings(idArr)
-		id := strings.Join(idArr, "_")
+		// we compute the id; unique whatever the link direction ( -> or <- )
+		id := model.GenLinkId(fk.SourceTable, fk.DestinationTable)
 		if links[id] == nil {
 			links[id] = &model.EntityLink{}
 		}
@@ -111,11 +109,39 @@ func Read(data string) *writer.UMLTree {
 			}
 		}
 	}
+	for _, l := range links {
+		if l.Left != nil {
+			if linksByTableName[l.Left.DestinationName] == nil || len(linksByTableName[l.Left.DestinationName]) == 0 {
+				linksByTableName[l.Left.DestinationName] = []*model.EntityLink{l}
+			} else {
+				linksByTableName[l.Left.DestinationName] = append(linksByTableName[l.Left.DestinationName], l)
+			}
+			if linksByTableName[l.Left.SourceName] == nil || len(linksByTableName[l.Left.SourceName]) == 0 {
+				linksByTableName[l.Left.SourceName] = []*model.EntityLink{l}
+			} else {
+				linksByTableName[l.Left.SourceName] = append(linksByTableName[l.Left.SourceName], l)
+			}
+		}
+		if l.Right != nil {
+			if linksByTableName[l.Right.DestinationName] == nil || len(linksByTableName[l.Right.DestinationName]) == 0 {
+				linksByTableName[l.Right.DestinationName] = []*model.EntityLink{l}
+			} else {
+				linksByTableName[l.Right.DestinationName] = append(linksByTableName[l.Right.DestinationName], l)
+			}
+			if linksByTableName[l.Right.SourceName] == nil || len(linksByTableName[l.Right.SourceName]) == 0 {
+				linksByTableName[l.Right.SourceName] = []*model.EntityLink{l}
+			} else {
+				linksByTableName[l.Right.SourceName] = append(linksByTableName[l.Right.SourceName], l)
+			}
+		}
+	}
 	logger.Info("data extracted")
 	return &writer.UMLTree{
-		Tables: tables,
-		Fks:    fks,
-		Links:  links,
+		LinksByTableName: linksByTableName,
+		TablesByName:     tablesByName,
+		Tables:           tables,
+		Fks:              fks,
+		Links:            links,
 	}
 }
 
@@ -192,8 +218,9 @@ func fieldsMatch(text string) ([]*model.Field, *model.PrimaryKey) {
 		} else {
 			logger.Warn("field didn't matched regex", "text", text)
 		}
-		if currentField.Name != "" {
+		if currentField.Name == "" {
 			logger.Warn("parsed field, but with an empty name", "field", f)
+		} else {
 			fields = append(fields, currentField)
 		}
 	}

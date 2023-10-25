@@ -1,8 +1,10 @@
 package writer
 
 import (
+	"log/slog"
 	"testing"
 
+	"github.com/epsxy/flower/pkg/global"
 	"github.com/epsxy/flower/pkg/model"
 	"github.com/stretchr/testify/require"
 )
@@ -217,6 +219,8 @@ const linkCommentsPosts = `public.comments }|--|| public.posts`
 const linkCommentsUsers = `public.comments }|--|| public.users`
 
 func Test_Build(t *testing.T) {
+	global.SetLogger(slog.LevelError)
+
 	res := input.Build()
 
 	require.Contains(t, res, postsTable)
