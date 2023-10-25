@@ -1,5 +1,10 @@
 package model
 
+import (
+	"sort"
+	"strings"
+)
+
 type Table struct {
 	Name         string            `yaml:"name,flow"`
 	Fields       []*Field          `yaml:"fields,flow"`
@@ -43,4 +48,20 @@ type Link struct {
 	SourceName      string `yaml:"sourceName,flow"`
 	DestinationName string `yaml:"destinationName,flow"`
 	IsNullable      bool   `yaml:"isNullable,flow"`
+}
+
+func (l *EntityLink) Id() string {
+	if l.Left != nil {
+		return GenLinkId(l.Left.DestinationName, l.Left.SourceName)
+	}
+	if l.Right != nil {
+		return GenLinkId(l.Right.DestinationName, l.Right.SourceName)
+	}
+	return ""
+}
+
+func GenLinkId(tableA, tableB string) string {
+	idArr := []string{tableA, tableB}
+	sort.Strings(idArr)
+	return strings.Join(idArr, "_")
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/epsxy/flower/pkg/global"
+	"github.com/epsxy/flower/pkg/graph"
 	"github.com/epsxy/flower/pkg/model"
 )
 
@@ -19,13 +21,17 @@ func WriteTable(t *model.Table) string {
 		result += fmt.Sprintf("* %s,%s\n", field.Name, string(field.Type))
 	}
 	result += "}\n"
-	return result
+	startUml := "@startuml todo\n"
+	endUml := "@enduml"
+	return startUml + result + endUml
 }
 
 type UMLTree struct {
-	Tables []*model.Table
-	Fks    []*model.ForeignKey
-	Links  map[string]*model.EntityLink
+	LinksByTableName map[string][]*model.EntityLink
+	TablesByName     map[string]*model.Table
+	Tables           []*model.Table
+	Fks              []*model.ForeignKey
+	Links            map[string]*model.EntityLink
 }
 
 func NewUMLBuilder() *UMLTree {
@@ -45,41 +51,119 @@ func (t *UMLTree) SetFks(fks []*model.ForeignKey) *UMLTree {
 	return t
 }
 
+func _buildCurrentTable(table *model.Table) string {
+	result := ""
+	result += fmt.Sprintf("entity %s {\n", table.Name)
+	currentPks := ""
+	currentContent := ""
+	keys := make([]string, 0, len(table.FieldsByName))
+	for k := range table.FieldsByName {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		field := table.FieldsByName[key]
+		if field.IsPrimaryKey {
+			// a PK is always mandatory
+			mandatoryDeclarator := "*"
+			currentPks += fmt.Sprintf("\t%s %s, PK, %s\n", mandatoryDeclarator, field.Name, string(field.Type))
+		} else {
+			mandatoryDeclarator := "*"
+			if field.IsNullable {
+				mandatoryDeclarator = " "
+			}
+			currentContent += fmt.Sprintf("\t%s %s, %s\n", mandatoryDeclarator, field.Name, string(field.Type))
+		}
+	}
+	result += currentPks
+	result += "--\n"
+	result += currentContent
+	result += "}\n"
+	return result
+}
+
 func (t *UMLTree) Build() string {
+	logger := global.GetLogger()
+
 	// build
 	var result string
 	for _, table := range t.Tables {
-		result += fmt.Sprintf("entity %s {\n", table.Name)
-		currentPks := ""
-		currentContent := ""
-		keys := make([]string, 0, len(table.FieldsByName))
-		for k := range table.FieldsByName {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, key := range keys {
-			field := table.FieldsByName[key]
-			if field.IsPrimaryKey {
-				// a PK is always mandatory
-				mandatoryDeclarator := "*"
-				currentPks += fmt.Sprintf("\t%s %s, PK, %s\n", mandatoryDeclarator, field.Name, string(field.Type))
-			} else {
-				mandatoryDeclarator := "*"
-				if field.IsNullable {
-					mandatoryDeclarator = " "
-				}
-				currentContent += fmt.Sprintf("\t%s %s, %s\n", mandatoryDeclarator, field.Name, string(field.Type))
-			}
-		}
-		result += currentPks
-		result += "--\n"
-		result += currentContent
-		result += "}\n"
+		result += _buildCurrentTable(table)
 	}
 	for _, link := range t.Links {
 		result += WriteLink(link)
 	}
+	logger.Info("basic build finished")
 	return result
+}
+
+func (t *UMLTree) BuildWithPartitions() []string {
+	logger := global.GetLogger()
+	res := []string{}
+
+	var tableNames []string
+	var g map[string][]string = map[string][]string{}
+	var visited map[string]bool = map[string]bool{}
+	for _, table := range t.Tables {
+		tableNames = append(tableNames, table.Name)
+		g[table.Name] = []string{}
+		visited[table.Name] = false
+	}
+	for _, link := range t.Links {
+		if link.Left != nil {
+			if !global.Contains(g[link.Left.SourceName], link.Left.DestinationName) {
+				g[link.Left.SourceName] = append(g[link.Left.SourceName], link.Left.DestinationName)
+			}
+			if !global.Contains(g[link.Left.DestinationName], link.Left.SourceName) {
+				g[link.Left.DestinationName] = append(g[link.Left.DestinationName], link.Left.SourceName)
+			}
+		}
+		if link.Right != nil {
+			if !global.Contains(g[link.Right.SourceName], link.Right.DestinationName) {
+				g[link.Right.SourceName] = append(g[link.Right.SourceName], link.Right.DestinationName)
+			}
+			if !global.Contains(g[link.Right.DestinationName], link.Right.SourceName) {
+				g[link.Right.DestinationName] = append(g[link.Right.DestinationName], link.Right.SourceName)
+			}
+		}
+	}
+	// split graph into partitions
+	partitions := graph.Dfs_root(tableNames, g, visited)
+	// export each partition to file
+	for _, p := range partitions {
+		currentRes := ""
+		currentResLinks := ""
+		linksBuiltMap := map[string]bool{}
+		for _, tableName := range p {
+			var res string
+			currentRes += _buildCurrentTable(t.TablesByName[tableName])
+			res, linksBuiltMap = _buildLinks(t.LinksByTableName[tableName], linksBuiltMap)
+			currentResLinks += res
+		}
+		startUml := "@startuml todo\n"
+		endUml := "@enduml"
+		res = append(res, startUml+currentRes+currentResLinks+endUml)
+	}
+	logger.Warn("finished build with partitions")
+	return res
+}
+
+func _buildLinks(links []*model.EntityLink, linksAlreadyBuilt map[string]bool) (string, map[string]bool) {
+	res := ""
+	for _, link := range links {
+		if link.Left != nil {
+			if !linksAlreadyBuilt[link.Id()] {
+				res += WriteLink(link)
+				linksAlreadyBuilt[link.Id()] = true
+			}
+		} else if link.Right != nil {
+			if !linksAlreadyBuilt[link.Id()] {
+				res += WriteLink(link)
+				linksAlreadyBuilt[link.Id()] = true
+			}
+		}
+	}
+	return res, linksAlreadyBuilt
 }
 
 /*

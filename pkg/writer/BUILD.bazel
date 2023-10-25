@@ -5,7 +5,11 @@ go_library(
     srcs = ["writer.go"],
     importpath = "github.com/epsxy/flower/pkg/writer",
     visibility = ["//visibility:public"],
-    deps = ["//pkg/model"],
+    deps = [
+        "//pkg/global",
+        "//pkg/graph",
+        "//pkg/model",
+    ],
 )
 
 go_test(
@@ -13,6 +17,7 @@ go_test(
     srcs = ["writer_test.go"],
     embed = [":writer"],
     deps = [
+        "//pkg/global",
         "//pkg/model",
         "@com_github_stretchr_testify//require",
     ],
