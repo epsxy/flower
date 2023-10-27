@@ -32,6 +32,7 @@ type UMLTree struct {
 	Tables           []*model.Table
 	Fks              []*model.ForeignKey
 	Links            map[string]*model.EntityLink
+	Options          *UMLTreeOptions
 }
 
 func NewUMLBuilder() *UMLTree {
@@ -82,9 +83,22 @@ func _buildCurrentTable(table *model.Table) string {
 	return result
 }
 
+type UMLTreeOptions struct {
+	SplitUnconnected bool
+	SplitDistance    bool
+	DistanceNorm     model.DistanceNorm
+	MaxPartitionSize int
+	WeightEdge       int
+	WeightDistance   int
+}
+
+func (t *UMLTree) SetOptions(options *UMLTreeOptions) *UMLTree {
+	t.Options = options
+	return t
+}
+
 func (t *UMLTree) Build() string {
 	logger := global.GetLogger()
-
 	// build
 	var result string
 	for _, table := range t.Tables {
@@ -144,6 +158,7 @@ func (t *UMLTree) BuildWithPartitions() []string {
 		endUml := "@enduml"
 		res = append(res, startUml+currentRes+currentResLinks+endUml)
 	}
+	fmt.Println(graph.Optimize(tableNames, g, t.Options.DistanceNorm))
 	logger.Warn("finished build with partitions")
 	return res
 }

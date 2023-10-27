@@ -4,9 +4,14 @@ go_library(
     name = "graph",
     srcs = [
         "dfs.go",
-        "optimise.go",
+        "distance.go",
     ],
     importpath = "github.com/epsxy/flower/pkg/graph",
     visibility = ["//visibility:public"],
-    deps = ["//pkg/utils"],
+    deps = [
+        "//pkg/model",
+        "//pkg/utils",
+        "@com_github_texttheater_golang_levenshtein_levenshtein//:go_default_library",
+        "@in_gopkg_vmarkovtsev_go_lcss_v1//:go-lcss_v1",
+    ],
 )
