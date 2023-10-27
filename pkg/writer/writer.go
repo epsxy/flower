@@ -26,32 +26,6 @@ func WriteTable(t *model.Table) string {
 	return startUml + result + endUml
 }
 
-type UMLTree struct {
-	LinksByTableName map[string][]*model.EntityLink
-	TablesByName     map[string]*model.Table
-	Tables           []*model.Table
-	Fks              []*model.ForeignKey
-	Links            map[string]*model.EntityLink
-	Options          *UMLTreeOptions
-}
-
-func NewUMLBuilder() *UMLTree {
-	return &UMLTree{
-		Tables: []*model.Table{},
-		Fks:    []*model.ForeignKey{},
-	}
-}
-
-func (t *UMLTree) SetTables(tables []*model.Table) *UMLTree {
-	t.Tables = tables
-	return t
-}
-
-func (t *UMLTree) SetFks(fks []*model.ForeignKey) *UMLTree {
-	t.Fks = fks
-	return t
-}
-
 func _buildCurrentTable(table *model.Table) string {
 	result := ""
 	result += fmt.Sprintf("entity %s {\n", table.Name)
@@ -83,66 +57,101 @@ func _buildCurrentTable(table *model.Table) string {
 	return result
 }
 
-type UMLTreeOptions struct {
-	SplitUnconnected bool
-	SplitDistance    bool
-	DistanceNorm     model.DistanceNorm
-	MaxPartitionSize int
-	WeightEdge       int
-	WeightDistance   int
-}
-
-func (t *UMLTree) SetOptions(options *UMLTreeOptions) *UMLTree {
-	t.Options = options
-	return t
-}
-
-func (t *UMLTree) Build() string {
-	logger := global.GetLogger()
-	// build
-	var result string
+func Build(t *model.UMLTree) []string {
+	//logger := global.GetLogger()
+	// list vertexes
+	var vertexes []string
 	for _, table := range t.Tables {
-		result += _buildCurrentTable(table)
+		vertexes = append(vertexes, table.Name)
 	}
-	for _, link := range t.Links {
-		result += WriteLink(link)
+	if !t.Options.SplitUnconnected && !t.Options.SplitDistance {
+		// in that case, we're not going to split anything, so we can build the ERD
+		return []string{_buildImpl(vertexes, t)}
+	}
+	// build graph structure
+	g := graph.Gen(vertexes, t.Links)
+	// split graph in connected partitions if enabled
+	var partitions [][]string
+	if t.Options.SplitUnconnected {
+		partitions = graph.Dfs_root(vertexes, g)
+	} else {
+		partitions = [][]string{vertexes}
+	}
+	// if distance split enabled, refine each connected partitions
+	var newPartitions [][]string
+	if t.Options.SplitDistance {
+		// TODO
+		for _, p := range partitions {
+			// TODO process each partition
+			res := graph.Split(p, g, *t.Options)
+			newPartitions = append(newPartitions, res...)
+		}
+	} else {
+		// nothing else to do
+		newPartitions = partitions
+	}
+	var response []string
+	for _, p := range newPartitions {
+		response = append(response, _buildImpl(p, t))
+	}
+	return response
+}
+
+func _generateDocumentName(vertexes []string) string {
+	if len(vertexes) == 1 {
+		return vertexes[0]
+	}
+	return "tables"
+}
+
+func _buildImpl(vertexes []string, t *model.UMLTree) string {
+	logger := global.GetLogger()
+	start := fmt.Sprintf("@startuml %s\n", _generateDocumentName(vertexes))
+	end := "@enduml"
+	tables := ""
+	links := ""
+	visitedLink := map[string]bool{}
+	for _, v := range vertexes {
+		tables += _buildCurrentTable(t.TablesByName[v])
+		for _, link := range t.LinksByTableName[v] {
+			if !visitedLink[link.Id()] {
+				visitedLink[link.Id()] = true
+				links += WriteLink(link)
+			}
+		}
 	}
 	logger.Info("basic build finished")
-	return result
+	return start + tables + links + end
 }
 
-func (t *UMLTree) BuildWithPartitions() []string {
+// func _buildImpl(t *model.UMLTree) string {
+// 	logger := global.GetLogger()
+// 	var result string
+// 	for _, table := range t.Tables {
+// 		result += _buildCurrentTable(table)
+// 	}
+// 	for _, link := range t.Links {
+// 		result += WriteLink(link)
+// 	}
+// 	logger.Info("basic build finished")
+// 	return result
+// }
+
+func BuildWithPartitions(t *model.UMLTree) []string {
 	logger := global.GetLogger()
 	res := []string{}
 
 	var tableNames []string
-	var g map[string][]string = map[string][]string{}
+	//var g map[string][]string = map[string][]string{}
 	var visited map[string]bool = map[string]bool{}
 	for _, table := range t.Tables {
 		tableNames = append(tableNames, table.Name)
-		g[table.Name] = []string{}
 		visited[table.Name] = false
 	}
-	for _, link := range t.Links {
-		if link.Left != nil {
-			if !global.Contains(g[link.Left.SourceName], link.Left.DestinationName) {
-				g[link.Left.SourceName] = append(g[link.Left.SourceName], link.Left.DestinationName)
-			}
-			if !global.Contains(g[link.Left.DestinationName], link.Left.SourceName) {
-				g[link.Left.DestinationName] = append(g[link.Left.DestinationName], link.Left.SourceName)
-			}
-		}
-		if link.Right != nil {
-			if !global.Contains(g[link.Right.SourceName], link.Right.DestinationName) {
-				g[link.Right.SourceName] = append(g[link.Right.SourceName], link.Right.DestinationName)
-			}
-			if !global.Contains(g[link.Right.DestinationName], link.Right.SourceName) {
-				g[link.Right.DestinationName] = append(g[link.Right.DestinationName], link.Right.SourceName)
-			}
-		}
-	}
+	// build graph
+	g := graph.Gen(tableNames, t.Links)
 	// split graph into partitions
-	partitions := graph.Dfs_root(tableNames, g, visited)
+	partitions := graph.Dfs_root(tableNames, g)
 	// export each partition to file
 	for _, p := range partitions {
 		currentRes := ""
@@ -154,11 +163,10 @@ func (t *UMLTree) BuildWithPartitions() []string {
 			res, linksBuiltMap = _buildLinks(t.LinksByTableName[tableName], linksBuiltMap)
 			currentResLinks += res
 		}
-		startUml := "@startuml todo\n"
+		startUml := "@startuml\n"
 		endUml := "@enduml"
 		res = append(res, startUml+currentRes+currentResLinks+endUml)
 	}
-	fmt.Println(graph.Optimize(tableNames, g, t.Options.DistanceNorm))
 	logger.Warn("finished build with partitions")
 	return res
 }

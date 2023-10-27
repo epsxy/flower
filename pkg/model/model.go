@@ -65,3 +65,43 @@ func GenLinkId(tableA, tableB string) string {
 	sort.Strings(idArr)
 	return strings.Join(idArr, "_")
 }
+
+type UMLTreeOptions struct {
+	SplitUnconnected bool
+	SplitDistance    bool
+	DistanceNorm     DistanceNorm
+	MaxPartitionSize int
+	WeightEdge       int
+	WeightDistance   int
+}
+
+type UMLTree struct {
+	LinksByTableName map[string][]*EntityLink
+	TablesByName     map[string]*Table
+	Tables           []*Table
+	Fks              []*ForeignKey
+	Links            map[string]*EntityLink // Links by ID
+	Options          *UMLTreeOptions
+}
+
+func (t *UMLTree) SetOptions(options *UMLTreeOptions) *UMLTree {
+	t.Options = options
+	return t
+}
+
+func NewUMLBuilder() *UMLTree {
+	return &UMLTree{
+		Tables: []*Table{},
+		Fks:    []*ForeignKey{},
+	}
+}
+
+func (t *UMLTree) SetTables(tables []*Table) *UMLTree {
+	t.Tables = tables
+	return t
+}
+
+func (t *UMLTree) SetFks(fks []*ForeignKey) *UMLTree {
+	t.Fks = fks
+	return t
+}

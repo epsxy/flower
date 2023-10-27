@@ -6,8 +6,9 @@ import (
 	"github.com/epsxy/flower/pkg/utils"
 )
 
-func Dfs_root(vertexes []string, graph map[string][]string, visited map[string]bool) [][]string {
+func Dfs_root(vertexes []string, graph map[string][]string) [][]string {
 	var partitions [][]string = [][]string{}
+	var visited map[string]bool = map[string]bool{}
 	for _, v := range vertexes {
 		if !utils.Array2DContains(partitions, v) {
 			c := _dfs_impl(v, graph, visited, []string{})

@@ -6,6 +6,9 @@ run:
 test:
 	bazel test --test_output=errors //...
 
+clean:
+	rm -rf bin/*.plantuml
+
 docker-build:
 	docker build . --tag flower:alpha
 

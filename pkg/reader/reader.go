@@ -7,10 +7,9 @@ import (
 
 	"github.com/epsxy/flower/pkg/global"
 	"github.com/epsxy/flower/pkg/model"
-	"github.com/epsxy/flower/pkg/writer"
 )
 
-func Read(data string) *writer.UMLTree {
+func Read(data string) *model.UMLTree {
 	logger := global.GetLogger()
 
 	// init objects
@@ -136,7 +135,7 @@ func Read(data string) *writer.UMLTree {
 		}
 	}
 	logger.Info("data extracted")
-	return &writer.UMLTree{
+	return &model.UMLTree{
 		LinksByTableName: linksByTableName,
 		TablesByName:     tablesByName,
 		Tables:           tables,
