@@ -27,8 +27,6 @@ func WriteTable(t *model.Table) string {
 }
 
 func _buildCurrentTable(table *model.Table) string {
-	fmt.Println(table)
-	fmt.Println(table.Name)
 	result := ""
 	result += fmt.Sprintf("entity %s {\n", table.Name)
 	currentPks := ""
@@ -66,8 +64,6 @@ func Build(t *model.UMLTree) []string {
 	for _, table := range t.Tables {
 		vertexes = append(vertexes, table.Name)
 	}
-	fmt.Println(vertexes)
-	fmt.Println(t)
 	if !t.Options.SplitUnconnected && !t.Options.SplitDistance {
 		// in that case, we're not going to split anything, so we can build the ERD
 		return []string{_buildImpl(vertexes, t)}
@@ -115,7 +111,6 @@ func _buildImpl(vertexes []string, t *model.UMLTree) string {
 	tables := ""
 	links := ""
 	visitedLink := map[string]bool{}
-	fmt.Println(vertexes)
 	for _, v := range vertexes {
 		tables += _buildCurrentTable(t.TablesByName[v])
 		for _, link := range t.LinksByTableName[v] {
