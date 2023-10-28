@@ -28,5 +28,5 @@ jobs:
         minimum-coverage: 20
         artifact-name: code-coverage-report
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: ${{ steps.covpath.outputs.COV_PATH }}/_coverage/
+        working-directory: ./
         update-comment: true
