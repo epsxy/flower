@@ -20,7 +20,7 @@ jobs:
         echo "COV_PATH=$(bazel info output_path)" >> $GITHUB_OUTPUT
       id: covpath
     - name: Coverage
-      run: bazel coverage --combined_report=lcov //...
+      run: bazel coverage --instrument_test_targets --experimental_cc_coverage --combined_report=lcov //...
     - name: Setup LCOV
       uses: hrishikesh-kadam/setup-lcov@v1
     - name: Report code coverage
