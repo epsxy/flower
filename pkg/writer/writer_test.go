@@ -302,3 +302,22 @@ func Test_Build(t *testing.T) {
 	require.Contains(t, res[0], linkCommentsPosts)
 	require.Contains(t, res[0], linkCommentsUsers)
 }
+
+func Test_generateDocumentName(t *testing.T) {
+	cases := map[string]struct {
+		vertexes []string
+		expected string
+	}{
+		"single table": {
+			vertexes: []string{"test_table_name"},
+			expected: "test_table_name",
+		},
+		"multiple tables": {
+			vertexes: []string{"table_a", "table_b"},
+			expected: "tables",
+		},
+	}
+	for name, c := range cases {
+		require.Equal(t, _generateDocumentName(c.vertexes), c.expected, name)
+	}
+}
