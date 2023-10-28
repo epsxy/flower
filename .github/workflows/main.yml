@@ -1,4 +1,4 @@
-name: Go
+name: Build
 
 on:
   push:
@@ -12,14 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
         go-version: 1.21
-
     - name: Build
       run: bazel build //:flower
-
+  test:
     - name: Test
       run: bazel test //...
