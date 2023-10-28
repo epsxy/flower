@@ -62,11 +62,25 @@ def go_dependencies():
         version = "v1.8.4",
     )
     go_repository(
+        name = "com_github_texttheater_golang_levenshtein_levenshtein",
+        importpath = "github.com/texttheater/golang-levenshtein/levenshtein",
+        sum = "h1:HelZ2kAFadG0La9d+4htN4HzQ68Bm2iM9qKMSMES6xg=",
+        version = "v0.0.0-20200805054039-cae8b0eaed6c",
+    )
+
+    go_repository(
         name = "in_gopkg_check_v1",
         importpath = "gopkg.in/check.v1",
         sum = "h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=",
         version = "v0.0.0-20161208181325-20d25e280405",
     )
+    go_repository(
+        name = "in_gopkg_vmarkovtsev_go_lcss_v1",
+        importpath = "gopkg.in/vmarkovtsev/go-lcss.v1",
+        sum = "h1:YY+ZVPsg2oJnV1rpzwIWtuCtQk71YFwuk47mMtjraN4=",
+        version = "v1.0.0-20181020221121-dfc501d07ea0",
+    )
+
     go_repository(
         name = "in_gopkg_yaml_v3",
         importpath = "gopkg.in/yaml.v3",

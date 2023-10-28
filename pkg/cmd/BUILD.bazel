@@ -11,7 +11,9 @@ go_library(
     deps = [
         "//pkg/global",
         "//pkg/log",
+        "//pkg/model",
         "//pkg/reader",
+        "//pkg/writer",
         "@com_github_spf13_cobra//:cobra",
     ],
 )

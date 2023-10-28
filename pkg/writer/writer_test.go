@@ -9,143 +9,153 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var input = &UMLTree{
+var tablePosts = model.Table{
+	Name: "public.posts",
+	Pk:   nil,
+	Fks:  nil,
+	Fields: []*model.Field{
+		{
+			Name:         "id",
+			Type:         "uuid ",
+			IsPrimaryKey: true,
+			IsNullable:   false,
+		},
+		{
+			Name:         "name",
+			Type:         "VARCHAR[34]",
+			IsPrimaryKey: false,
+			IsNullable:   false,
+		},
+		{
+			Name:         "description",
+			Type:         "VARCHAR[514]",
+			IsPrimaryKey: false,
+			IsNullable:   true,
+		},
+		{
+			Name:         "created_at",
+			Type:         "timestamp without time zone ",
+			IsPrimaryKey: false,
+			IsNullable:   false,
+		},
+	},
+	FieldsByName: map[string]*model.Field{
+		"id": {
+			Name:         "id",
+			Type:         "uuid ",
+			IsPrimaryKey: true,
+			IsNullable:   false,
+		},
+		"name": {
+			Name:         "name",
+			Type:         "VARCHAR[34]",
+			IsPrimaryKey: false,
+			IsNullable:   false,
+		},
+		"description": {
+			Name:         "description",
+			Type:         "VARCHAR[514]",
+			IsPrimaryKey: false,
+			IsNullable:   true,
+		},
+		"created_at": {
+			Name:         "created_at",
+			Type:         "timestamp without time zone ",
+			IsPrimaryKey: false,
+			IsNullable:   false,
+		},
+	},
+}
+
+var tableUsers = model.Table{
+	Name: "public.users",
+	Pk:   nil,
+	Fks:  nil,
+	Fields: []*model.Field{
+		{
+			Name:         "name",
+			Type:         "VARCHAR[34]",
+			IsPrimaryKey: false,
+			IsNullable:   false,
+		},
+		{
+			Name:         "id",
+			Type:         "BIGINT  AUTO_INCREMENT",
+			IsPrimaryKey: true,
+			IsNullable:   false,
+		},
+	},
+	FieldsByName: map[string]*model.Field{
+		"name": {
+			Name:         "name",
+			Type:         "VARCHAR[34]",
+			IsPrimaryKey: false,
+			IsNullable:   false,
+		},
+		"id": {
+			Name:         "id",
+			Type:         "BIGINT  AUTO_INCREMENT",
+			IsPrimaryKey: true,
+			IsNullable:   false,
+		},
+	},
+}
+
+var tableComments = model.Table{
+	Name: "public.comments",
+	Pk:   nil,
+	Fks:  nil,
+	Fields: []*model.Field{
+		{
+			Name:         "user_id",
+			Type:         "BIGINT ",
+			IsPrimaryKey: true,
+			IsNullable:   false,
+		},
+		{
+			Name:         "content",
+			Type:         "VARCHAR[514]",
+			IsPrimaryKey: false,
+			IsNullable:   true,
+		},
+		{
+			Name:         "post_id",
+			Type:         "BIGINT  AUTO_INCREMENT",
+			IsPrimaryKey: true,
+			IsNullable:   false,
+		},
+	},
+	FieldsByName: map[string]*model.Field{
+		"user_id": {
+			Name:         "user_id",
+			Type:         "BIGINT ",
+			IsPrimaryKey: true,
+			IsNullable:   false,
+		},
+		"content": {
+			Name:         "content",
+			Type:         "VARCHAR[514]",
+			IsPrimaryKey: false,
+			IsNullable:   true,
+		},
+		"post_id": {
+			Name:         "post_id",
+			Type:         "BIGINT  AUTO_INCREMENT",
+			IsPrimaryKey: true,
+			IsNullable:   false,
+		},
+	},
+}
+
+var input = &model.UMLTree{
+	Options: &model.UMLTreeOptions{
+		SplitUnconnected: false,
+		SplitDistance:    false,
+	},
 	Tables: []*model.Table{
-		{
-			Name: "public.posts",
-			Pk:   nil,
-			Fks:  nil,
-			Fields: []*model.Field{
-				{
-					Name:         "id",
-					Type:         "uuid ",
-					IsPrimaryKey: true,
-					IsNullable:   false,
-				},
-				{
-					Name:         "name",
-					Type:         "VARCHAR[34]",
-					IsPrimaryKey: false,
-					IsNullable:   false,
-				},
-				{
-					Name:         "description",
-					Type:         "VARCHAR[514]",
-					IsPrimaryKey: false,
-					IsNullable:   true,
-				},
-				{
-					Name:         "created_at",
-					Type:         "timestamp without time zone ",
-					IsPrimaryKey: false,
-					IsNullable:   false,
-				},
-			},
-			FieldsByName: map[string]*model.Field{
-				"id": {
-					Name:         "id",
-					Type:         "uuid ",
-					IsPrimaryKey: true,
-					IsNullable:   false,
-				},
-				"name": {
-					Name:         "name",
-					Type:         "VARCHAR[34]",
-					IsPrimaryKey: false,
-					IsNullable:   false,
-				},
-				"description": {
-					Name:         "description",
-					Type:         "VARCHAR[514]",
-					IsPrimaryKey: false,
-					IsNullable:   true,
-				},
-				"created_at": {
-					Name:         "created_at",
-					Type:         "timestamp without time zone ",
-					IsPrimaryKey: false,
-					IsNullable:   false,
-				},
-			},
-		},
-		{
-			Name: "public.users",
-			Pk:   nil,
-			Fks:  nil,
-			Fields: []*model.Field{
-				{
-					Name:         "name",
-					Type:         "VARCHAR[34]",
-					IsPrimaryKey: false,
-					IsNullable:   false,
-				},
-				{
-					Name:         "id",
-					Type:         "BIGINT  AUTO_INCREMENT",
-					IsPrimaryKey: true,
-					IsNullable:   false,
-				},
-			},
-			FieldsByName: map[string]*model.Field{
-				"name": {
-					Name:         "name",
-					Type:         "VARCHAR[34]",
-					IsPrimaryKey: false,
-					IsNullable:   false,
-				},
-				"id": {
-					Name:         "id",
-					Type:         "BIGINT  AUTO_INCREMENT",
-					IsPrimaryKey: true,
-					IsNullable:   false,
-				},
-			},
-		},
-		{
-			Name: "public.comments",
-			Pk:   nil,
-			Fks:  nil,
-			Fields: []*model.Field{
-				{
-					Name:         "user_id",
-					Type:         "BIGINT ",
-					IsPrimaryKey: true,
-					IsNullable:   false,
-				},
-				{
-					Name:         "content",
-					Type:         "VARCHAR[514]",
-					IsPrimaryKey: false,
-					IsNullable:   true,
-				},
-				{
-					Name:         "post_id",
-					Type:         "BIGINT  AUTO_INCREMENT",
-					IsPrimaryKey: true,
-					IsNullable:   false,
-				},
-			},
-			FieldsByName: map[string]*model.Field{
-				"user_id": {
-					Name:         "user_id",
-					Type:         "BIGINT ",
-					IsPrimaryKey: true,
-					IsNullable:   false,
-				},
-				"content": {
-					Name:         "content",
-					Type:         "VARCHAR[514]",
-					IsPrimaryKey: false,
-					IsNullable:   true,
-				},
-				"post_id": {
-					Name:         "post_id",
-					Type:         "BIGINT  AUTO_INCREMENT",
-					IsPrimaryKey: true,
-					IsNullable:   false,
-				},
-			},
-		},
+		&tablePosts,
+		&tableUsers,
+		&tableComments,
 	},
 	Fks: []*model.ForeignKey{
 		{
@@ -193,6 +203,67 @@ var input = &UMLTree{
 			Right: nil,
 		},
 	},
+	TablesByName: map[string]*model.Table{
+		tablePosts.Name:    &tablePosts,
+		tableUsers.Name:    &tableUsers,
+		tableComments.Name: &tableComments,
+	},
+	LinksByTableName: map[string][]*model.EntityLink{
+		tablePosts.Name: {
+			{
+				Left: &model.Link{
+					SourceName:      "public.posts",
+					DestinationName: "public.users",
+					IsNullable:      false,
+				},
+				Right: nil,
+			},
+			{
+				Left: &model.Link{
+					SourceName:      "public.comments",
+					DestinationName: "public.posts",
+					IsNullable:      false,
+				},
+				Right: nil,
+			},
+		},
+		tableUsers.Name: {
+			{
+				Left: &model.Link{
+					SourceName:      "public.posts",
+					DestinationName: "public.users",
+					IsNullable:      false,
+				},
+				Right: nil,
+			},
+			{
+				Left: &model.Link{
+					SourceName:      "public.comments",
+					DestinationName: "public.users",
+					IsNullable:      false,
+				},
+				Right: nil,
+			},
+		},
+		tableComments.Name: {
+			{
+				Left: &model.Link{
+					SourceName:      "public.comments",
+					DestinationName: "public.posts",
+					IsNullable:      false,
+				},
+				Right: nil,
+			},
+			{
+				Left: &model.Link{
+					SourceName:      "public.comments",
+					DestinationName: "public.users",
+					IsNullable:      false,
+				},
+				Right: nil,
+			},
+		},
+	},
 }
 
 const postsTable = `entity public.posts {
@@ -221,12 +292,13 @@ const linkCommentsUsers = `public.comments }|--|| public.users`
 func Test_Build(t *testing.T) {
 	global.SetLogger(slog.LevelError)
 
-	res := input.Build()
+	res := Build(input)
 
-	require.Contains(t, res, postsTable)
-	require.Contains(t, res, usersTable)
-	require.Contains(t, res, commentsTable)
-	require.Contains(t, res, linkPostUsers)
-	require.Contains(t, res, linkCommentsPosts)
-	require.Contains(t, res, linkCommentsUsers)
+	require.Equal(t, len(res), 1)
+	require.Contains(t, res[0], postsTable)
+	require.Contains(t, res[0], usersTable)
+	require.Contains(t, res[0], commentsTable)
+	require.Contains(t, res[0], linkPostUsers)
+	require.Contains(t, res[0], linkCommentsPosts)
+	require.Contains(t, res[0], linkCommentsUsers)
 }
