@@ -20,7 +20,7 @@ jobs:
     - name: Report code coverage
       uses: zgosalvez/github-actions-report-lcov@v3
       with:
-        coverage-files: "$(bazel info output_path)/_coverage/*.dat"
+        coverage-files: $(bazel info output_path)/_coverage/*.dat
         minimum-coverage: 20
         artifact-name: code-coverage-report
         github-token: ${{ secrets.GITHUB_TOKEN }}
