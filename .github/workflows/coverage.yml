@@ -5,7 +5,6 @@ name: Continuous Integration
 jobs:
   coverage_report:
     name: Generate coverage report
-    needs: Go
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
