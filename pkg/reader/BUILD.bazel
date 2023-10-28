@@ -8,7 +8,6 @@ go_library(
     deps = [
         "//pkg/global",
         "//pkg/model",
-        "//pkg/writer",
     ],
 )
 

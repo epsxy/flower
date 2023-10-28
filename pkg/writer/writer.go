@@ -27,6 +27,8 @@ func WriteTable(t *model.Table) string {
 }
 
 func _buildCurrentTable(table *model.Table) string {
+	fmt.Println(table)
+	fmt.Println(table.Name)
 	result := ""
 	result += fmt.Sprintf("entity %s {\n", table.Name)
 	currentPks := ""
@@ -64,6 +66,8 @@ func Build(t *model.UMLTree) []string {
 	for _, table := range t.Tables {
 		vertexes = append(vertexes, table.Name)
 	}
+	fmt.Println(vertexes)
+	fmt.Println(t)
 	if !t.Options.SplitUnconnected && !t.Options.SplitDistance {
 		// in that case, we're not going to split anything, so we can build the ERD
 		return []string{_buildImpl(vertexes, t)}
@@ -73,7 +77,7 @@ func Build(t *model.UMLTree) []string {
 	// split graph in connected partitions if enabled
 	var partitions [][]string
 	if t.Options.SplitUnconnected {
-		partitions = graph.Dfs_root(vertexes, g)
+		partitions = graph.Dfs(vertexes, g)
 	} else {
 		partitions = [][]string{vertexes}
 	}
@@ -111,6 +115,7 @@ func _buildImpl(vertexes []string, t *model.UMLTree) string {
 	tables := ""
 	links := ""
 	visitedLink := map[string]bool{}
+	fmt.Println(vertexes)
 	for _, v := range vertexes {
 		tables += _buildCurrentTable(t.TablesByName[v])
 		for _, link := range t.LinksByTableName[v] {
@@ -151,7 +156,7 @@ func BuildWithPartitions(t *model.UMLTree) []string {
 	// build graph
 	g := graph.Gen(tableNames, t.Links)
 	// split graph into partitions
-	partitions := graph.Dfs_root(tableNames, g)
+	partitions := graph.Dfs(tableNames, g)
 	// export each partition to file
 	for _, p := range partitions {
 		currentRes := ""

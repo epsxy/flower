@@ -6,7 +6,7 @@ import (
 	"github.com/epsxy/flower/pkg/utils"
 )
 
-func Dfs_root(vertexes []string, graph map[string][]string) [][]string {
+func Dfs(vertexes []string, graph map[string][]string) [][]string {
 	var partitions [][]string = [][]string{}
 	var visited map[string]bool = map[string]bool{}
 	for _, v := range vertexes {
