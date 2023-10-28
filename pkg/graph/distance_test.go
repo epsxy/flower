@@ -7,17 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Split(t *testing.T) {
-	// TODO
-}
+// TODO: implement missing tests
+// func Test_Split(t *testing.T) {
 
-func Test_ReArrangePartitions(t *testing.T) {
-	// TODO
-}
+// }
 
-func Test_Weight(t *testing.T) {
-	// TODO
-}
+// func Test_ReArrangePartitions(t *testing.T) {
+
+// }
+
+// func Test_Weight(t *testing.T) {
+
+// }
 
 func Test_partitionWeight(t *testing.T) {
 	cases := map[string]struct {
