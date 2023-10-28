@@ -1,6 +1,8 @@
 on: pull_request
 
 name: Continuous Integration
+permissions:
+  pull-requests: write
 
 jobs:
   coverage_report:
