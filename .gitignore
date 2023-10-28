@@ -7,7 +7,6 @@ bin/out_*
 
 data/example.sql
 
-.github
 .vscode
 
 # Bazel
