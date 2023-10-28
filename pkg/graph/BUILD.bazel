@@ -20,7 +20,13 @@ go_library(
 
 go_test(
     name = "graph_test",
-    srcs = ["dfs_test.go"],
+    srcs = [
+        "dfs_test.go",
+        "gen_test.go",
+    ],
     embed = [":graph"],
-    deps = ["@com_github_stretchr_testify//require"],
+    deps = [
+        "//pkg/model",
+        "@com_github_stretchr_testify//require",
+    ],
 )
