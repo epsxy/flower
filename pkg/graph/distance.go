@@ -127,7 +127,7 @@ func partitionWeight(partition []string, graph map[string][]string, affinity map
 				count++
 			}
 		}
-		if i < len(partition)-2 {
+		if i < len(partition)-1 {
 			count += 1 * affinity[v][partition[i+1]]
 		}
 	}
@@ -153,6 +153,7 @@ func wordWeight(w1, w2 string, norm model.DistanceNorm) float64 {
 	var d float64
 	switch norm {
 	case model.DistanceNormSubstring:
+		// FIXME: Non-commutative operation
 		d = float64(len(string(lcss.LongestCommonSubstring([]byte(w1), []byte(w2))))) / float64(len(w1))
 		return utils.RoundFloat(d, 2)
 	case model.DistanceNormLevenshtein:

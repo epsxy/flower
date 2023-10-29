@@ -16,9 +16,70 @@ import (
 
 // }
 
-// func Test_Weight(t *testing.T) {
-
-// }
+func Test_Weight(t *testing.T) {
+	cases := map[string]struct {
+		partition [][]string
+		graph     map[string][]string
+		affinity  map[string]map[string]float64
+		expected  float64
+	}{
+		"nominal": {
+			partition: [][]string{
+				{"table_a", "table_a_tags"},
+				{"table_b", "table_b_tags"},
+				{"table_a_table_b"},
+			},
+			graph: map[string][]string{
+				"table_a":         {"table_a_tags", "table_a_table_b"},
+				"table_b":         {"table_b_tags", "table_a_table_b"},
+				"table_a_table_b": {"table_a", "table_b"},
+				"table_a_tags":    {"table_a"},
+				"table_b_tags":    {"table_b"},
+			},
+			affinity: map[string]map[string]float64{
+				"table_a": {
+					"table_a":         float64(0),
+					"table_b":         float64(0.86),
+					"table_a_table_b": float64(1),
+					"table_a_tags":    float64(1),
+					"table_b_tags":    float64(0.86),
+				},
+				"table_b": {
+					"table_a":         float64(0.86),
+					"table_b":         float64(0),
+					"table_a_table_b": float64(1),
+					"table_a_tags":    float64(0.86),
+					"table_b_tags":    float64(1),
+				},
+				"table_a_table_b": {
+					"table_a":         float64(0.47),
+					"table_b":         float64(0.47),
+					"table_a_table_b": float64(0),
+					"table_a_tags":    float64(0.67),
+					"table_b_tags":    float64(0.47),
+				},
+				"table_a_tags": {
+					"table_a":         float64(0.58),
+					"table_b":         float64(0.5),
+					"table_a_table_b": float64(0.83),
+					"table_a_tags":    float64(0),
+					"table_b_tags":    float64(0.5),
+				},
+				"table_b_tags": {
+					"table_a":         float64(0.5),
+					"table_b":         float64(0.58),
+					"table_a_table_b": float64(0.58),
+					"table_a_tags":    float64(0.5),
+					"table_b_tags":    float64(0),
+				},
+			},
+			expected: float64(6),
+		},
+	}
+	for name, c := range cases {
+		require.Equal(t, Weight(c.partition, c.graph, c.affinity), c.expected, name)
+	}
+}
 
 func Test_partitionWeight(t *testing.T) {
 	cases := map[string]struct {
@@ -73,7 +134,7 @@ func Test_partitionWeight(t *testing.T) {
 					"table_b_tags":    float64(0),
 				},
 			},
-			expected: float64(10.53),
+			expected: float64(11.03),
 		},
 	}
 	for name, c := range cases {

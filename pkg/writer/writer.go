@@ -32,9 +32,7 @@ func Build(t *model.UMLTree) []string {
 	// if distance split enabled, refine each connected partitions
 	var newPartitions [][]string
 	if t.Options.SplitDistance {
-		// TODO
 		for _, p := range partitions {
-			// TODO process each partition
 			res := graph.Split(p, g, *t.Options)
 			newPartitions = append(newPartitions, res...)
 		}
