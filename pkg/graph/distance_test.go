@@ -150,48 +150,48 @@ func Test_buildAffinityMatrix(t *testing.T) {
 	}{
 		"substring: full match": {
 			vertexes: []string{"table_a", "table_b", "table_a_table_b", "table_a_tags", "table_b_tags"},
-			norm:     model.DistanceNormSubstring,
+			norm:     model.DistanceNormLevenshtein,
 			expected: map[string]map[string]float64{
 				"table_a": {
 					"table_a":         float64(0),
-					"table_b":         float64(0.86),
-					"table_a_table_b": float64(1),
-					"table_a_tags":    float64(1),
-					"table_b_tags":    float64(0.86),
+					"table_b":         float64(0.5),
+					"table_a_table_b": float64(0.13),
+					"table_a_tags":    float64(0.2),
+					"table_b_tags":    float64(0.2),
 				},
 				"table_b": {
-					"table_a":         float64(0.86),
+					"table_a":         float64(0.5),
+					"table_a_table_b": float64(0.13),
+					"table_a_tags":    float64(0.14),
 					"table_b":         float64(0),
-					"table_a_table_b": float64(1),
-					"table_a_tags":    float64(0.86),
-					"table_b_tags":    float64(1),
+					"table_b_tags":    float64(0.2),
 				},
 				"table_a_table_b": {
-					"table_a":         float64(0.47),
-					"table_b":         float64(0.47),
+					"table_a":         float64(0.13),
+					"table_b":         float64(0.13),
 					"table_a_table_b": float64(0),
-					"table_a_tags":    float64(0.67),
-					"table_b_tags":    float64(0.47),
+					"table_a_tags":    float64(0.14),
+					"table_b_tags":    float64(0.11),
 				},
 				"table_a_tags": {
-					"table_a":         float64(0.58),
-					"table_b":         float64(0.5),
-					"table_a_table_b": float64(0.83),
+					"table_a":         float64(0.2),
+					"table_b":         float64(0.14),
+					"table_a_table_b": float64(0.14),
 					"table_a_tags":    float64(0),
 					"table_b_tags":    float64(0.5),
 				},
 				"table_b_tags": {
-					"table_a":         float64(0.5),
-					"table_b":         float64(0.58),
-					"table_a_table_b": float64(0.58),
+					"table_a":         float64(0.2),
+					"table_a_table_b": float64(0.11),
 					"table_a_tags":    float64(0.5),
+					"table_b":         float64(0.2),
 					"table_b_tags":    float64(0),
 				},
 			},
 		},
 	}
 	for name, c := range cases {
-		require.Equal(t, buildAffinityMatrix(c.vertexes, c.norm), c.expected, name)
+		require.Equal(t, c.expected, buildAffinityMatrix(c.vertexes, c.norm), name)
 	}
 }
 
@@ -206,19 +206,19 @@ func Test_wordWeight(t *testing.T) {
 			word1:    "here_is_a_string",
 			word2:    "here_is_a_string_suffixed",
 			norm:     model.DistanceNormSubstring,
-			expected: float64(1),
+			expected: float64(0.82),
 		},
 		"substring: reversed full match": {
 			word1:    "here_is_a_string_suffixed",
 			word2:    "here_is_a_string",
 			norm:     model.DistanceNormSubstring,
-			expected: float64(0.64),
+			expected: float64(0.82),
 		},
 		"substring: partial mid-word match": {
 			word1:    "here_is_a_string",
 			word2:    "hey_is_ok",
 			norm:     model.DistanceNormSubstring,
-			expected: float64(0.25),
+			expected: float64(0.35),
 		},
 		"substring: no match": {
 			word1:    "here_is_a_string",
