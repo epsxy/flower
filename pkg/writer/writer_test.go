@@ -321,3 +321,122 @@ func Test_generateDocumentName(t *testing.T) {
 		require.Equal(t, _generateDocumentName(c.vertexes), c.expected, name)
 	}
 }
+
+func Test_WriteLink(t *testing.T) {
+	cases := map[string]struct {
+		link     *model.EntityLink
+		expected string
+	}{
+		"link: 1 <-> 1": {
+			link: &model.EntityLink{
+				Left: &model.Link{
+					SourceName:      "table_a",
+					DestinationName: "table_b",
+					IsNullable:      false,
+				},
+				Right: &model.Link{
+					SourceName:      "table_b",
+					DestinationName: "table_a",
+					IsNullable:      false,
+				},
+			},
+			expected: "table_a ||--|| table_b\n",
+		},
+		"link: 0,1 <-> 1": {
+			link: &model.EntityLink{
+				Left: &model.Link{
+					SourceName:      "table_a",
+					DestinationName: "table_b",
+					IsNullable:      false,
+				},
+				Right: &model.Link{
+					SourceName:      "table_b",
+					DestinationName: "table_a",
+					IsNullable:      true,
+				},
+			},
+			expected: "table_a |o--|| table_b\n",
+		},
+		"link: 1 <-> 0,1": {
+			link: &model.EntityLink{
+				Left: &model.Link{
+					SourceName:      "table_a",
+					DestinationName: "table_b",
+					IsNullable:      true,
+				},
+				Right: &model.Link{
+					SourceName:      "table_b",
+					DestinationName: "table_a",
+					IsNullable:      false,
+				},
+			},
+			expected: "table_a ||--o| table_b\n",
+		},
+		"link: 0,1 <-> 0,1": {
+			link: &model.EntityLink{
+				Left: &model.Link{
+					SourceName:      "table_a",
+					DestinationName: "table_b",
+					IsNullable:      true,
+				},
+				Right: &model.Link{
+					SourceName:      "table_b",
+					DestinationName: "table_a",
+					IsNullable:      true,
+				},
+			},
+			expected: "table_a |o--o| table_b\n",
+		},
+		"link: 1 -> N": {
+			link: &model.EntityLink{
+				Left: nil,
+				Right: &model.Link{
+					SourceName:      "table_b",
+					DestinationName: "table_a",
+					IsNullable:      false,
+				},
+			},
+			expected: "table_a ||--|{ table_b\n",
+		},
+		"link: 0,1 -> N": {
+			link: &model.EntityLink{
+				Left: nil,
+				Right: &model.Link{
+					SourceName:      "table_b",
+					DestinationName: "table_a",
+					IsNullable:      true,
+				},
+			},
+			expected: "table_a |o--|{ table_b\n",
+		},
+		"link: N <- 1": {
+			link: &model.EntityLink{
+				Left: &model.Link{
+					SourceName:      "table_a",
+					DestinationName: "table_b",
+					IsNullable:      false,
+				},
+				Right: nil,
+			},
+			expected: "table_a }|--|| table_b\n",
+		},
+		"link: N <- 0, 1": {
+			link: &model.EntityLink{
+				Left: &model.Link{
+					SourceName:      "table_a",
+					DestinationName: "table_b",
+					IsNullable:      true,
+				},
+				Right: nil,
+			},
+			expected: "table_a }|--o| table_b\n",
+		},
+		"empty link": {
+			link:     nil,
+			expected: "",
+		},
+	}
+	for name, c := range cases {
+		require.Equal(t, WriteLink(c.link), c.expected, name)
+	}
+}

@@ -119,6 +119,10 @@ One or Many 	}|--
 */
 func WriteLink(l *model.EntityLink) string {
 	var leftFragment, rightFragment string
+	// handle empty case
+	if l == nil || (l.Left == nil && l.Right == nil) {
+		return ""
+	}
 	// 0,1<-->0,1 links
 	if l.Left != nil && l.Right != nil {
 		if l.Left.IsNullable {

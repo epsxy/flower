@@ -9,7 +9,7 @@ Features:
 - Indicates field types (best effort, 'unstable')
 - Indicates mandatory/nullable fields
 - Indicates primary keys
-- Displays link between tables (0,1,N <-> 0,1,N)
+- Displays link between tables (0,1,N ↔ 0,1,N)
 
 Ideas:
 - Optimise parsing (atm pretty naive, remove some un-needed for loops and models, etc)
