@@ -9,54 +9,6 @@ import (
 	"github.com/epsxy/flower/pkg/model"
 )
 
-func Write() {
-
-}
-
-// TODO: remove (deprecated)
-func WriteTable(t *model.Table) string {
-	var result string
-	result += fmt.Sprintf("entity %s {\n", t.Name)
-	for _, field := range t.Fields {
-		result += fmt.Sprintf("* %s,%s\n", field.Name, string(field.Type))
-	}
-	result += "}\n"
-	startUml := "@startuml todo\n"
-	endUml := "@enduml"
-	return startUml + result + endUml
-}
-
-func _buildCurrentTable(table *model.Table) string {
-	result := ""
-	result += fmt.Sprintf("entity %s {\n", table.Name)
-	currentPks := ""
-	currentContent := ""
-	keys := make([]string, 0, len(table.FieldsByName))
-	for k := range table.FieldsByName {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		field := table.FieldsByName[key]
-		if field.IsPrimaryKey {
-			// a PK is always mandatory
-			mandatoryDeclarator := "*"
-			currentPks += fmt.Sprintf("\t%s %s, PK, %s\n", mandatoryDeclarator, field.Name, string(field.Type))
-		} else {
-			mandatoryDeclarator := "*"
-			if field.IsNullable {
-				mandatoryDeclarator = " "
-			}
-			currentContent += fmt.Sprintf("\t%s %s, %s\n", mandatoryDeclarator, field.Name, string(field.Type))
-		}
-	}
-	result += currentPks
-	result += "--\n"
-	result += currentContent
-	result += "}\n"
-	return result
-}
-
 func Build(t *model.UMLTree) []string {
 	//logger := global.GetLogger()
 	// list vertexes
@@ -97,6 +49,37 @@ func Build(t *model.UMLTree) []string {
 	return response
 }
 
+func _buildCurrentTable(table *model.Table) string {
+	result := ""
+	result += fmt.Sprintf("entity %s {\n", table.Name)
+	currentPks := ""
+	currentContent := ""
+	keys := make([]string, 0, len(table.FieldsByName))
+	for k := range table.FieldsByName {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		field := table.FieldsByName[key]
+		if field.IsPrimaryKey {
+			// a PK is always mandatory
+			mandatoryDeclarator := "*"
+			currentPks += fmt.Sprintf("\t%s %s, PK, %s\n", mandatoryDeclarator, field.Name, string(field.Type))
+		} else {
+			mandatoryDeclarator := "*"
+			if field.IsNullable {
+				mandatoryDeclarator = " "
+			}
+			currentContent += fmt.Sprintf("\t%s %s, %s\n", mandatoryDeclarator, field.Name, string(field.Type))
+		}
+	}
+	result += currentPks
+	result += "--\n"
+	result += currentContent
+	result += "}\n"
+	return result
+}
+
 func _generateDocumentName(vertexes []string) string {
 	if len(vertexes) == 1 {
 		return vertexes[0]
@@ -122,71 +105,6 @@ func _buildImpl(vertexes []string, t *model.UMLTree) string {
 	}
 	logger.Info("basic build finished")
 	return start + tables + links + end
-}
-
-// func _buildImpl(t *model.UMLTree) string {
-// 	logger := global.GetLogger()
-// 	var result string
-// 	for _, table := range t.Tables {
-// 		result += _buildCurrentTable(table)
-// 	}
-// 	for _, link := range t.Links {
-// 		result += WriteLink(link)
-// 	}
-// 	logger.Info("basic build finished")
-// 	return result
-// }
-
-func BuildWithPartitions(t *model.UMLTree) []string {
-	logger := global.GetLogger()
-	res := []string{}
-
-	var tableNames []string
-	//var g map[string][]string = map[string][]string{}
-	var visited map[string]bool = map[string]bool{}
-	for _, table := range t.Tables {
-		tableNames = append(tableNames, table.Name)
-		visited[table.Name] = false
-	}
-	// build graph
-	g := graph.Gen(tableNames, t.Links)
-	// split graph into partitions
-	partitions := graph.Dfs(tableNames, g)
-	// export each partition to file
-	for _, p := range partitions {
-		currentRes := ""
-		currentResLinks := ""
-		linksBuiltMap := map[string]bool{}
-		for _, tableName := range p {
-			var res string
-			currentRes += _buildCurrentTable(t.TablesByName[tableName])
-			res, linksBuiltMap = _buildLinks(t.LinksByTableName[tableName], linksBuiltMap)
-			currentResLinks += res
-		}
-		startUml := "@startuml\n"
-		endUml := "@enduml"
-		res = append(res, startUml+currentRes+currentResLinks+endUml)
-	}
-	logger.Warn("finished build with partitions")
-	return res
-}
-
-func _buildLinks(links []*model.EntityLink, linksAlreadyBuilt map[string]bool) (string, map[string]bool) {
-	res := ""
-	for _, link := range links {
-		if link.Left != nil {
-			if !linksAlreadyBuilt[link.Id()] {
-				res += WriteLink(link)
-				linksAlreadyBuilt[link.Id()] = true
-			}
-		} else if link.Right != nil {
-			if !linksAlreadyBuilt[link.Id()] {
-				res += WriteLink(link)
-				linksAlreadyBuilt[link.Id()] = true
-			}
-		}
-	}
-	return res, linksAlreadyBuilt
 }
 
 /*

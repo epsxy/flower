@@ -22,6 +22,7 @@ go_test(
     name = "graph_test",
     srcs = [
         "dfs_test.go",
+        "distance_test.go",
         "gen_test.go",
     ],
     embed = [":graph"],

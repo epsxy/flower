@@ -1,4 +1,4 @@
-name: Go
+name: Main
 
 on:
   push:
@@ -6,20 +6,60 @@ on:
   pull_request:
     branches: [ master ]
 
-jobs:
+permissions:
+  pull-requests: write
 
+jobs:
   build:
+    name: Build source
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
         go-version: 1.21
-
     - name: Build
       run: bazel build //:flower
-
+  test:
+    name: Run tests
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.21
     - name: Test
       run: bazel test //...
+  coverage_report:
+    name: Generate coverage report
+    if: github.event_name == 'pull_request'
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.21
+    - name: Retrieve path
+      run: |
+        echo "COV_PATH=$(bazel info output_path)" >> $GITHUB_OUTPUT
+      id: covpath
+    - name: Coverage
+      run: bazel coverage --instrument_test_targets --experimental_cc_coverage --combined_report=lcov //...
+    - name: Setup LCOV
+      uses: hrishikesh-kadam/setup-lcov@v1
+    - name: Report code coverage
+      uses: zgosalvez/github-actions-report-lcov@v3
+      with:
+        coverage-files: ${{ steps.covpath.outputs.COV_PATH }}/_coverage/_coverage_report.dat
+        minimum-coverage: 20
+        artifact-name: code-coverage-report
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: ./
+        update-comment: true
