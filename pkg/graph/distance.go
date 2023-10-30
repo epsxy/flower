@@ -127,7 +127,7 @@ func partitionWeight(partition []string, graph map[string][]string, affinity map
 				count++
 			}
 		}
-		if i < len(partition)-2 {
+		if i < len(partition)-1 {
 			count += 1 * affinity[v][partition[i+1]]
 		}
 	}
@@ -153,13 +153,16 @@ func wordWeight(w1, w2 string, norm model.DistanceNorm) float64 {
 	var d float64
 	switch norm {
 	case model.DistanceNormSubstring:
-		d = float64(len(string(lcss.LongestCommonSubstring([]byte(w1), []byte(w2))))) / float64(len(w1))
-		return utils.RoundFloat(d, 2)
+		d1 := float64(len(string(lcss.LongestCommonSubstring([]byte(w1), []byte(w2))))) / float64(len(w1))
+		d2 := float64(len(string(lcss.LongestCommonSubstring([]byte(w1), []byte(w2))))) / float64(len(w2))
+		d = (d1 + d2) / 2
 	case model.DistanceNormLevenshtein:
 		// TODO: handle custom levenshtein options
 		d = 1 / float64(levenshtein.DistanceForStrings([]rune(w1), []rune(w2), levenshtein.DefaultOptions))
 	default:
-		d = float64(len(string(lcss.LongestCommonSubstring([]byte(w1), []byte(w2))))) / float64(len(w1))
+		d1 := float64(len(string(lcss.LongestCommonSubstring([]byte(w1), []byte(w2))))) / float64(len(w1))
+		d2 := float64(len(string(lcss.LongestCommonSubstring([]byte(w1), []byte(w2))))) / float64(len(w2))
+		d = (d1 + d2) / 2
 	}
 	return utils.RoundFloat(d, 2)
 }

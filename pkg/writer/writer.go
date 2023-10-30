@@ -32,9 +32,7 @@ func Build(t *model.UMLTree) []string {
 	// if distance split enabled, refine each connected partitions
 	var newPartitions [][]string
 	if t.Options.SplitDistance {
-		// TODO
 		for _, p := range partitions {
-			// TODO process each partition
 			res := graph.Split(p, g, *t.Options)
 			newPartitions = append(newPartitions, res...)
 		}
@@ -119,6 +117,10 @@ One or Many 	}|--
 */
 func WriteLink(l *model.EntityLink) string {
 	var leftFragment, rightFragment string
+	// handle empty case
+	if l == nil || (l.Left == nil && l.Right == nil) {
+		return ""
+	}
 	// 0,1<-->0,1 links
 	if l.Left != nil && l.Right != nil {
 		if l.Left.IsNullable {
