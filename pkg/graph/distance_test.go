@@ -22,6 +22,7 @@ func Test_ReArrangePartitions(t *testing.T) {
 		p2        []string
 		graph     map[string][]string
 		affinity  map[string]map[string]float64
+		options   *model.UMLTreeOptions
 		expectedX []string
 		expectedY []string
 	}{
@@ -108,10 +109,18 @@ func Test_ReArrangePartitions(t *testing.T) {
 			},
 			expectedX: []string{"table_c2", "table_g2", "table_h2", "table_k2", "table_i2", "table_f2", "table_g1", "table_h1", "table_l2", "table_j1", "table_d1", "table_l1"},
 			expectedY: []string{"table_f1", "table_a2", "table_b2", "table_b1", "table_a1", "table_d2", "table_e1", "table_e2", "table_c1", "table_k1", "table_j2", "table_i1"},
+			options: &model.UMLTreeOptions{
+				SplitUnconnected: false,
+				SplitDistance:    true,
+				DistanceNorm:     model.DistanceNormLevenshtein,
+				MaxPartitionSize: 20,
+				WeightEdge:       1,
+				WeightDistance:   1,
+			},
 		},
 	}
 	for name, c := range cases {
-		x, y := ReArrangePartitions(c.p1, c.p2, c.graph, _buildFakeAffinityMap(c.p1, c.p2))
+		x, y := ReArrangePartitions(c.p1, c.p2, c.graph, _buildFakeAffinityMap(c.p1, c.p2), c.options)
 		require.Equal(t, x, c.expectedX, name)
 		require.Equal(t, y, c.expectedY, name)
 		// verify no value from the original partitions was lost
@@ -133,6 +142,7 @@ func Test_Weight(t *testing.T) {
 		partition [][]string
 		graph     map[string][]string
 		affinity  map[string]map[string]float64
+		options   *model.UMLTreeOptions
 		expected  float64
 	}{
 		"nominal": {
@@ -185,11 +195,19 @@ func Test_Weight(t *testing.T) {
 					"table_b_tags":    float64(0),
 				},
 			},
+			options: &model.UMLTreeOptions{
+				SplitUnconnected: false,
+				SplitDistance:    true,
+				DistanceNorm:     model.DistanceNormLevenshtein,
+				MaxPartitionSize: 20,
+				WeightEdge:       1,
+				WeightDistance:   1,
+			},
 			expected: float64(6),
 		},
 	}
 	for name, c := range cases {
-		require.Equal(t, Weight(c.partition, c.graph, c.affinity), c.expected, name)
+		require.Equal(t, Weight(c.partition, c.graph, c.affinity, c.options), c.expected, name)
 	}
 }
 
@@ -198,6 +216,7 @@ func Test_partitionWeight(t *testing.T) {
 		partition []string
 		graph     map[string][]string
 		affinity  map[string]map[string]float64
+		options   *model.UMLTreeOptions
 		expected  float64
 	}{
 		"nominal": {
@@ -247,10 +266,18 @@ func Test_partitionWeight(t *testing.T) {
 				},
 			},
 			expected: float64(11.03),
+			options: &model.UMLTreeOptions{
+				SplitUnconnected: false,
+				SplitDistance:    true,
+				DistanceNorm:     model.DistanceNormLevenshtein,
+				MaxPartitionSize: 20,
+				WeightEdge:       1,
+				WeightDistance:   1,
+			},
 		},
 	}
 	for name, c := range cases {
-		require.Equal(t, partitionWeight(c.partition, c.graph, c.affinity), c.expected, name)
+		require.Equal(t, partitionWeight(c.partition, c.graph, c.affinity, c.options), c.expected, name)
 	}
 }
 
