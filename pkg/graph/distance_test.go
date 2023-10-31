@@ -1,9 +1,13 @@
 package graph
 
 import (
+	"fmt"
+	"math/rand"
+	"strconv"
 	"testing"
 
 	"github.com/epsxy/flower/pkg/model"
+	"github.com/epsxy/flower/pkg/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -12,9 +16,117 @@ import (
 
 // }
 
-// func Test_ReArrangePartitions(t *testing.T) {
-
-// }
+func Test_ReArrangePartitions(t *testing.T) {
+	cases := map[string]struct {
+		p1        []string
+		p2        []string
+		graph     map[string][]string
+		affinity  map[string]map[string]float64
+		expectedX []string
+		expectedY []string
+	}{
+		"nominal": {
+			p1: []string{
+				"table_a1", "table_b1", "table_c1", "table_d1", "table_e1", "table_f1", "table_g1", "table_h1", "table_i1", "table_j1", "table_k1", "table_l1",
+			},
+			p2: []string{
+				"table_a2", "table_b2", "table_c2", "table_d2", "table_e2", "table_f2", "table_g2", "table_h2", "table_i2", "table_j2", "table_k2", "table_l2",
+			},
+			// MermaidJs chart:
+			// flowchart LR
+			// table_a1((A1))
+			// table_a2((A2))
+			// table_b1((B1))
+			// table_b2((B2))
+			// table_c1((C1))
+			// table_c2((C2))
+			// table_d1((D1))
+			// table_d2((D2))
+			// table_e1((E1))
+			// table_e2((E2))
+			// table_f1((F1))
+			// table_f2((F2))
+			// table_g1((G1))
+			// table_g2((G2))
+			// table_h1((H1))
+			// table_h2((H2))
+			// table_i1((I1))
+			// table_i2((I2))
+			// table_j1((J1))
+			// table_j2((J2))
+			// table_k1((K1))
+			// table_k2((K2))
+			// table_l1((L1))
+			// table_l2((L2))
+			// table_a1 --> table_b1 --> table_a2 --> table_a1
+			// table_a1 --> table_c1 --> table_c2 --> table_d1
+			// table_a1 --> table_d1
+			// table_b2 --> table_a1
+			// table_d2 --> table_b2
+			// table_e1 --> table_b2
+			// table_e2 --> table_b2
+			// table_f1 --> table_a1
+			// table_e2 --> table_f1
+			// table_f2 --> table_g1 --> table_g2
+			// table_h2 --> table_h1
+			// table_i2 --> table_h1
+			// table_j2 --> table_h1
+			// table_k2 --> table_h1
+			// table_h1 --> table_g1
+			// table_g2 --> table_d1
+			// table_i1 --> table_h2
+			// table_j1 --> table_e2
+			// table_j1 --> table_k2
+			// table_k1 --> table_j1
+			// table_l1 --> table_j1
+			// table_l2 --> table_j1
+			graph: map[string][]string{
+				"table_a1": {"table_b1", "table_a2", "table_c1", "table_d1", "table_f1", "table_b2"}, // OK
+				"table_a2": {"table_b1", "table_a1"},                                                 // OK
+				"table_b1": {"table_a1", "table_a2"},                                                 // OK
+				"table_b2": {"table_d2", "table_e1", "table_e2", "table_a1"},                         // OK
+				"table_c1": {"table_a1", "table_c2"},                                                 // OK
+				"table_c2": {"table_c1", "table_d1"},                                                 // OK
+				"table_d1": {"table_c2", "table_a1", "table_g2"},                                     // OK
+				"table_d2": {"table_b2"},                                                             // OK
+				"table_e1": {"table_b2"},                                                             // OK
+				"table_e2": {"table_b2", "table_f1", "table_j1"},                                     // OK
+				"table_f1": {"table_e2", "table_a1"},                                                 // OK
+				"table_f2": {"table_g1"},                                                             // OK
+				"table_g1": {"table_h1", "table_f2", "table_g2"},                                     // OK
+				"table_g2": {"table_g1", "table_d1"},                                                 // OK
+				"table_h1": {"table_k2", "table_j2", "table_i2", "table_h2", "table_g1"},             // OK
+				"table_h2": {"table_h1", "table_i1"},                                                 // OK
+				"table_i1": {"table_h2"},                                                             // OK
+				"table_i2": {"table_h1"},                                                             // OK
+				"table_j1": {"table_k1", "table_l1", "table_l2", "table_k2", "table_e2"},             // OK
+				"table_j2": {"table_h1"},                                                             // OK
+				"table_k1": {"table_j1"},                                                             // OK
+				"table_k2": {"table_j1", "table_h1"},                                                 // OK
+				"table_l1": {"table_j1"},                                                             // OK
+				"table_l2": {"table_j1"},                                                             // OK
+			},
+			expectedX: []string{"table_c2", "table_g2", "table_h2", "table_k2", "table_i2", "table_f2", "table_g1", "table_h1", "table_l2", "table_j1", "table_d1", "table_l1"},
+			expectedY: []string{"table_f1", "table_a2", "table_b2", "table_b1", "table_a1", "table_d2", "table_e1", "table_e2", "table_c1", "table_k1", "table_j2", "table_i1"},
+		},
+	}
+	for name, c := range cases {
+		x, y := ReArrangePartitions(c.p1, c.p2, c.graph, _buildFakeAffinityMap(c.p1, c.p2))
+		require.Equal(t, x, c.expectedX, name)
+		require.Equal(t, y, c.expectedY, name)
+		// verify no value from the original partitions was lost
+		for _, v := range c.p1 {
+			containsX := utils.ArrayContains(x, v)
+			containsY := utils.ArrayContains(y, v)
+			require.True(t, containsX != containsY, fmt.Sprintf("element `%s` was in no array or in both arrays", v))
+		}
+		for _, v := range c.p2 {
+			containsX := utils.ArrayContains(x, v)
+			containsY := utils.ArrayContains(y, v)
+			require.True(t, containsX != containsY, fmt.Sprintf("element `%s` was in no array or in both arrays", v))
+		}
+	}
+}
 
 func Test_Weight(t *testing.T) {
 	cases := map[string]struct {
@@ -255,4 +367,20 @@ func Test_wordWeight(t *testing.T) {
 	for name, c := range cases {
 		require.Equal(t, wordWeight(c.word1, c.word2, c.norm), c.expected, name)
 	}
+}
+
+func _buildFakeAffinityMap(p1 []string, p2 []string) map[string]map[string]float64 {
+	res := map[string]map[string]float64{}
+	for i, v := range p1 {
+		res[v] = map[string]float64{}
+		for j, w := range p2 {
+			seed, err := strconv.ParseInt(fmt.Sprintf("%d%d", i, j), 10, 64)
+			if err != nil {
+				panic("failed to seed random float")
+			}
+			r := rand.New(rand.NewSource(seed))
+			res[v][w] = r.Float64()
+		}
+	}
+	return res
 }
