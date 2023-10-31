@@ -28,54 +28,18 @@ func Split(vertexes []string, graph map[string][]string, options model.UMLTreeOp
 	affinityMatrix := buildAffinityMatrix(vertexes, options.DistanceNorm)
 
 	// optimize each partition
-	for i, v := range splitVertexes {
-		for j, w := range splitVertexes {
+	for i := range splitVertexes {
+		for j := range splitVertexes {
 			if i >= j {
 				continue
 			}
-			splitVertexes[i], splitVertexes[j] = ReArrangePartitions(v, w, graph, affinityMatrix)
+			splitVertexes[i], splitVertexes[j] = ReArrangePartitions(splitVertexes[i], splitVertexes[j], graph, affinityMatrix)
 		}
 	}
 
 	// return
 	return splitVertexes
 }
-
-// TODO: Remove naive implementation
-// func SplitOld(vertexes []string, graph map[string][]string, distance model.DistanceNorm) [][]string {
-// 	mid := len(vertexes) / 2
-// 	left := vertexes[:mid]
-// 	right := vertexes[mid:]
-
-// 	affinityMatrix := buildAffinityMatrix(vertexes, distance)
-
-// 	var tempLeft []string = make([]string, len(left))
-// 	var tempRight []string = make([]string, len(right))
-
-// 	copy(tempLeft, left)
-// 	copy(tempRight, right)
-
-// 	var resLeft []string = make([]string, len(left))
-// 	var resRight []string = make([]string, len(right))
-
-// 	copy(resLeft, left)
-// 	copy(resRight, right)
-
-// 	currentWeight := Weight([][]string{left, right}, graph, affinityMatrix)
-// 	for i, v := range left {
-// 		for j, w := range right {
-// 			tempLeft[i] = w
-// 			tempRight[j] = v
-// 			weight := Weight([][]string{tempLeft, tempRight}, graph, affinityMatrix)
-// 			if weight > currentWeight {
-// 				currentWeight = weight
-// 				copy(resLeft, tempLeft)
-// 				copy(resRight, tempRight)
-// 			}
-// 		}
-// 	}
-// 	return [][]string{resLeft, resRight}
-// }
 
 func ReArrangePartitions(p1, p2 []string, graph map[string][]string, affinityMatrix map[string]map[string]float64) ([]string, []string) {
 	var tempP1 []string = make([]string, len(p1))
@@ -91,15 +55,19 @@ func ReArrangePartitions(p1, p2 []string, graph map[string][]string, affinityMat
 	copy(resP2, p2)
 
 	currentWeight := Weight([][]string{p1, p2}, graph, affinityMatrix)
-	for i, v := range p1 {
-		for j, w := range p2 {
-			tempP1[i] = w
-			tempP2[j] = v
+	for i := range p1 {
+		for j := range p2 {
+			temp := tempP1[i]
+			tempP1[i] = tempP2[j]
+			tempP2[j] = temp
 			weight := Weight([][]string{tempP1, tempP2}, graph, affinityMatrix)
 			if weight > currentWeight {
 				currentWeight = weight
 				copy(resP1, tempP1)
 				copy(resP2, tempP2)
+			} else {
+				tempP2[j] = tempP1[i]
+				tempP1[i] = temp
 			}
 		}
 	}
