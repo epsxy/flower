@@ -33,7 +33,7 @@ func Build(t *model.UMLTree) []string {
 	var newPartitions [][]string
 	if t.Options.SplitDistance {
 		for _, p := range partitions {
-			res := graph.Split(p, g, *t.Options)
+			res := graph.Split(p, g, t.Options)
 			newPartitions = append(newPartitions, res...)
 		}
 	} else {
