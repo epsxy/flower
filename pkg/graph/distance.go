@@ -7,7 +7,7 @@ import (
 	"gopkg.in/vmarkovtsev/go-lcss.v1"
 )
 
-func Split(vertexes []string, graph map[string][]string, options model.UMLTreeOptions) [][]string {
+func Split(vertexes []string, graph map[string][]string, options *model.UMLTreeOptions) [][]string {
 	var splitVertexes [][]string
 	// trivial case, we can return the full vertexes list
 	if len(vertexes) < options.MaxPartitionSize {
@@ -33,7 +33,7 @@ func Split(vertexes []string, graph map[string][]string, options model.UMLTreeOp
 			if i >= j {
 				continue
 			}
-			splitVertexes[i], splitVertexes[j] = ReArrangePartitions(splitVertexes[i], splitVertexes[j], graph, affinityMatrix)
+			splitVertexes[i], splitVertexes[j] = ReArrangePartitions(splitVertexes[i], splitVertexes[j], graph, affinityMatrix, options)
 		}
 	}
 
@@ -41,7 +41,7 @@ func Split(vertexes []string, graph map[string][]string, options model.UMLTreeOp
 	return splitVertexes
 }
 
-func ReArrangePartitions(p1, p2 []string, graph map[string][]string, affinityMatrix map[string]map[string]float64) ([]string, []string) {
+func ReArrangePartitions(p1, p2 []string, graph map[string][]string, affinityMatrix map[string]map[string]float64, options *model.UMLTreeOptions) ([]string, []string) {
 	var tempP1 []string = make([]string, len(p1))
 	var tempP2 []string = make([]string, len(p2))
 
@@ -54,13 +54,13 @@ func ReArrangePartitions(p1, p2 []string, graph map[string][]string, affinityMat
 	copy(resP1, p1)
 	copy(resP2, p2)
 
-	currentWeight := Weight([][]string{p1, p2}, graph, affinityMatrix)
+	currentWeight := Weight([][]string{p1, p2}, graph, affinityMatrix, options)
 	for i := range p1 {
 		for j := range p2 {
 			temp := tempP1[i]
 			tempP1[i] = tempP2[j]
 			tempP2[j] = temp
-			weight := Weight([][]string{tempP1, tempP2}, graph, affinityMatrix)
+			weight := Weight([][]string{tempP1, tempP2}, graph, affinityMatrix, options)
 			if weight > currentWeight {
 				currentWeight = weight
 				copy(resP1, tempP1)
@@ -74,10 +74,10 @@ func ReArrangePartitions(p1, p2 []string, graph map[string][]string, affinityMat
 	return resP1, resP2
 }
 
-func Weight(partitions [][]string, graph map[string][]string, affinityMatrix map[string]map[string]float64) float64 {
+func Weight(partitions [][]string, graph map[string][]string, affinityMatrix map[string]map[string]float64, options *model.UMLTreeOptions) float64 {
 	count := float64(0)
 	for _, partition := range partitions {
-		count += partitionWeight(partition, graph, affinityMatrix)
+		count += partitionWeight(partition, graph, affinityMatrix, options)
 	}
 	return count
 }
@@ -87,16 +87,16 @@ func Weight(partitions [][]string, graph map[string][]string, affinityMatrix map
 // - If 2 neighbours are in the same partition we add k1 × 1 (default)
 // - We also add k2 × 1 (default) the affinity ratio
 // - Otherwise 0
-func partitionWeight(partition []string, graph map[string][]string, affinity map[string]map[string]float64) float64 {
+func partitionWeight(partition []string, graph map[string][]string, affinity map[string]map[string]float64, options *model.UMLTreeOptions) float64 {
 	count := float64(0)
 	for i, v := range partition {
 		for _, j := range graph[v] {
 			if utils.ArrayContains(partition, j) {
-				count++
+				count += float64(options.WeightEdge) * 1
 			}
 		}
 		if i < len(partition)-1 {
-			count += 1 * affinity[v][partition[i+1]]
+			count += float64(options.WeightDistance) * affinity[v][partition[i+1]]
 		}
 	}
 	return count
