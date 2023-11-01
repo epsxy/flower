@@ -15,6 +15,7 @@ rm-cov:
 
 clean:
 	rm -rf bin/*.plantuml
+	rm -rf genhtml
 
 docker-build:
 	docker build . --tag flower:alpha
