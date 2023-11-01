@@ -3,6 +3,7 @@ package graph
 import (
 	"fmt"
 	"math/rand"
+	"sort"
 	"strconv"
 	"testing"
 
@@ -11,10 +12,145 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: implement missing tests
-// func Test_Split(t *testing.T) {
+// MermaidJs chart used in tests
+// flowchart LR
+// table_a1((A1))
+// table_a2((A2))
+// table_b1((B1))
+// table_b2((B2))
+// table_c1((C1))
+// table_c2((C2))
+// table_d1((D1))
+// table_d2((D2))
+// table_e1((E1))
+// table_e2((E2))
+// table_f1((F1))
+// table_f2((F2))
+// table_g1((G1))
+// table_g2((G2))
+// table_h1((H1))
+// table_h2((H2))
+// table_i1((I1))
+// table_i2((I2))
+// table_j1((J1))
+// table_j2((J2))
+// table_k1((K1))
+// table_k2((K2))
+// table_l1((L1))
+// table_l2((L2))
+// table_a1 --> table_b1 --> table_a2 --> table_a1
+// table_a1 --> table_c1 --> table_c2 --> table_d1
+// table_a1 --> table_d1
+// table_b2 --> table_a1
+// table_d2 --> table_b2
+// table_e1 --> table_b2
+// table_e2 --> table_b2
+// table_f1 --> table_a1
+// table_e2 --> table_f1
+// table_f2 --> table_g1 --> table_g2
+// table_h2 --> table_h1
+// table_i2 --> table_h1
+// table_j2 --> table_h1
+// table_k2 --> table_h1
+// table_h1 --> table_g1
+// table_g2 --> table_d1
+// table_i1 --> table_h2
+// table_j1 --> table_e2
+// table_j1 --> table_k2
+// table_k1 --> table_j1
+// table_l1 --> table_j1
+// table_l2 --> table_j1
 
-// }
+func Test_Split(t *testing.T) {
+	cases := map[string]struct {
+		vertexes []string
+		graph    map[string][]string
+		affinity map[string]map[string]float64
+		options  *model.UMLTreeOptions
+		expected [][]string
+	}{
+		"nominal": {
+			vertexes: []string{
+				"table_a1", "table_b1", "table_c1", "table_d1", "table_e1", "table_f1", "table_g1", "table_h1", "table_i1", "table_j1", "table_k1", "table_l1",
+				"table_a2", "table_b2", "table_c2", "table_d2", "table_e2", "table_f2", "table_g2", "table_h2", "table_i2", "table_j2", "table_k2", "table_l2",
+			},
+			graph: map[string][]string{
+				"table_a1": {"table_b1", "table_a2", "table_c1", "table_d1", "table_f1", "table_b2"},
+				"table_a2": {"table_b1", "table_a1"},
+				"table_b1": {"table_a1", "table_a2"},
+				"table_b2": {"table_d2", "table_e1", "table_e2", "table_a1"},
+				"table_c1": {"table_a1", "table_c2"},
+				"table_c2": {"table_c1", "table_d1"},
+				"table_d1": {"table_c2", "table_a1", "table_g2"},
+				"table_d2": {"table_b2"},
+				"table_e1": {"table_b2"},
+				"table_e2": {"table_b2", "table_f1", "table_j1"},
+				"table_f1": {"table_e2", "table_a1"},
+				"table_f2": {"table_g1"},
+				"table_g1": {"table_h1", "table_f2", "table_g2"},
+				"table_g2": {"table_g1", "table_d1"},
+				"table_h1": {"table_k2", "table_j2", "table_i2", "table_h2", "table_g1"},
+				"table_h2": {"table_h1", "table_i1"},
+				"table_i1": {"table_h2"},
+				"table_i2": {"table_h1"},
+				"table_j1": {"table_k1", "table_l1", "table_l2", "table_k2", "table_e2"},
+				"table_j2": {"table_h1"},
+				"table_k1": {"table_j1"},
+				"table_k2": {"table_j1", "table_h1"},
+				"table_l1": {"table_j1"},
+				"table_l2": {"table_j1"},
+			},
+			options: &model.UMLTreeOptions{
+				SplitUnconnected: false,
+				SplitDistance:    true,
+				DistanceNorm:     model.DistanceNormLevenshtein,
+				MaxPartitionSize: 5,
+				WeightEdge:       1,
+				WeightDistance:   1,
+			},
+			expected: [][]string{
+				{"table_a1", "table_c2", "table_c1", "table_d1", "table_g2"},
+				{"table_k2", "table_k1", "table_l2", "table_l1", "table_j1"},
+				{"table_e1", "table_d2", "table_a2", "table_b1", "table_b2"},
+				{"table_j2", "table_e2", "table_f2", "table_f1", "table_g1"},
+				{"table_h1", "table_i1", "table_h2", "table_i2"},
+			},
+		},
+		"do nothing if the array is too small (trivial case)": {
+			vertexes: []string{"table_a1", "table_a2", "table_a3"},
+			graph: map[string][]string{
+				"table_a1": {"table_a2", "table_a3"},
+				"table_a2": {"table_a1", "table_a3"},
+				"table_a3": {"table_a1", "table_a2"},
+			},
+			options: &model.UMLTreeOptions{
+				SplitUnconnected: false,
+				SplitDistance:    true,
+				DistanceNorm:     model.DistanceNormLevenshtein,
+				MaxPartitionSize: 5,
+				WeightEdge:       1,
+				WeightDistance:   1,
+			},
+			expected: [][]string{
+				{"table_a1", "table_a2", "table_a3"},
+			},
+		},
+	}
+	for name, c := range cases {
+		res := Split(c.vertexes, c.graph, c.options)
+		require.Equal(t, res, c.expected, name)
+		responseLength := 0
+		joinedRes := []string{}
+		for _, r := range res {
+			responseLength += len(r)
+			joinedRes = append(joinedRes, r...)
+		}
+		require.Equal(t, len(c.vertexes), responseLength, "input and response don't have the same number of elements")
+		sort.Strings(c.vertexes)
+		sort.Strings(joinedRes)
+		require.Equal(t, c.vertexes, joinedRes, "input and response don't have the exact same elements")
+	}
+}
 
 func Test_ReArrangePartitions(t *testing.T) {
 	cases := map[string]struct {
@@ -33,79 +169,31 @@ func Test_ReArrangePartitions(t *testing.T) {
 			p2: []string{
 				"table_a2", "table_b2", "table_c2", "table_d2", "table_e2", "table_f2", "table_g2", "table_h2", "table_i2", "table_j2", "table_k2", "table_l2",
 			},
-			// MermaidJs chart:
-			// flowchart LR
-			// table_a1((A1))
-			// table_a2((A2))
-			// table_b1((B1))
-			// table_b2((B2))
-			// table_c1((C1))
-			// table_c2((C2))
-			// table_d1((D1))
-			// table_d2((D2))
-			// table_e1((E1))
-			// table_e2((E2))
-			// table_f1((F1))
-			// table_f2((F2))
-			// table_g1((G1))
-			// table_g2((G2))
-			// table_h1((H1))
-			// table_h2((H2))
-			// table_i1((I1))
-			// table_i2((I2))
-			// table_j1((J1))
-			// table_j2((J2))
-			// table_k1((K1))
-			// table_k2((K2))
-			// table_l1((L1))
-			// table_l2((L2))
-			// table_a1 --> table_b1 --> table_a2 --> table_a1
-			// table_a1 --> table_c1 --> table_c2 --> table_d1
-			// table_a1 --> table_d1
-			// table_b2 --> table_a1
-			// table_d2 --> table_b2
-			// table_e1 --> table_b2
-			// table_e2 --> table_b2
-			// table_f1 --> table_a1
-			// table_e2 --> table_f1
-			// table_f2 --> table_g1 --> table_g2
-			// table_h2 --> table_h1
-			// table_i2 --> table_h1
-			// table_j2 --> table_h1
-			// table_k2 --> table_h1
-			// table_h1 --> table_g1
-			// table_g2 --> table_d1
-			// table_i1 --> table_h2
-			// table_j1 --> table_e2
-			// table_j1 --> table_k2
-			// table_k1 --> table_j1
-			// table_l1 --> table_j1
-			// table_l2 --> table_j1
 			graph: map[string][]string{
-				"table_a1": {"table_b1", "table_a2", "table_c1", "table_d1", "table_f1", "table_b2"}, // OK
-				"table_a2": {"table_b1", "table_a1"},                                                 // OK
-				"table_b1": {"table_a1", "table_a2"},                                                 // OK
-				"table_b2": {"table_d2", "table_e1", "table_e2", "table_a1"},                         // OK
-				"table_c1": {"table_a1", "table_c2"},                                                 // OK
-				"table_c2": {"table_c1", "table_d1"},                                                 // OK
-				"table_d1": {"table_c2", "table_a1", "table_g2"},                                     // OK
-				"table_d2": {"table_b2"},                                                             // OK
-				"table_e1": {"table_b2"},                                                             // OK
-				"table_e2": {"table_b2", "table_f1", "table_j1"},                                     // OK
-				"table_f1": {"table_e2", "table_a1"},                                                 // OK
-				"table_f2": {"table_g1"},                                                             // OK
-				"table_g1": {"table_h1", "table_f2", "table_g2"},                                     // OK
-				"table_g2": {"table_g1", "table_d1"},                                                 // OK
-				"table_h1": {"table_k2", "table_j2", "table_i2", "table_h2", "table_g1"},             // OK
-				"table_h2": {"table_h1", "table_i1"},                                                 // OK
-				"table_i1": {"table_h2"},                                                             // OK
-				"table_i2": {"table_h1"},                                                             // OK
-				"table_j1": {"table_k1", "table_l1", "table_l2", "table_k2", "table_e2"},             // OK
-				"table_j2": {"table_h1"},                                                             // OK
-				"table_k1": {"table_j1"},                                                             // OK
-				"table_k2": {"table_j1", "table_h1"},                                                 // OK
-				"table_l1": {"table_j1"},                                                             // OK
-				"table_l2": {"table_j1"},                                                             // OK
+				"table_a1": {"table_b1", "table_a2", "table_c1", "table_d1", "table_f1", "table_b2"},
+				"table_a2": {"table_b1", "table_a1"},
+				"table_b1": {"table_a1", "table_a2"},
+				"table_b2": {"table_d2", "table_e1", "table_e2", "table_a1"},
+				"table_c1": {"table_a1", "table_c2"},
+				"table_c2": {"table_c1", "table_d1"},
+				"table_d1": {"table_c2", "table_a1", "table_g2"},
+				"table_d2": {"table_b2"},
+				"table_e1": {"table_b2"},
+				"table_e2": {"table_b2", "table_f1", "table_j1"},
+				"table_f1": {"table_e2", "table_a1"},
+				"table_f2": {"table_g1"},
+				"table_g1": {"table_h1", "table_f2", "table_g2"},
+				"table_g2": {"table_g1", "table_d1"},
+				"table_h1": {"table_k2", "table_j2", "table_i2", "table_h2", "table_g1"},
+				"table_h2": {"table_h1", "table_i1"},
+				"table_i1": {"table_h2"},
+				"table_i2": {"table_h1"},
+				"table_j1": {"table_k1", "table_l1", "table_l2", "table_k2", "table_e2"},
+				"table_j2": {"table_h1"},
+				"table_k1": {"table_j1"},
+				"table_k2": {"table_j1", "table_h1"},
+				"table_l1": {"table_j1"},
+				"table_l2": {"table_j1"},
 			},
 			expectedX: []string{"table_c2", "table_g2", "table_h2", "table_k2", "table_i2", "table_f2", "table_g1", "table_h1", "table_l2", "table_j1", "table_d1", "table_l1"},
 			expectedY: []string{"table_f1", "table_a2", "table_b2", "table_b1", "table_a1", "table_d2", "table_e1", "table_e2", "table_c1", "table_k1", "table_j2", "table_i1"},

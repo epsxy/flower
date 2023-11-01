@@ -8,7 +8,7 @@ test:
 
 cov:
 	bazel coverage --instrument_test_targets --experimental_cc_coverage --combined_report=lcov //...
-	genhtml --output genhtml $(bazel info output_path)/_coverage/_coverage_report.dat
+# genhtml --output genhtml $(bazel info output_path)/_coverage/_coverage_report.dat
 
 rm-cov:
 	rm -rf genhtml
