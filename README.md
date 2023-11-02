@@ -62,76 +62,9 @@ Flags:
 
 ## Example
 
-### Input
-
-```sql
--- posts table
-CREATE TABLE public.posts (
-  id uuid NOT NULL,
-  name VARCHAR(34) NOT NULL,
-  description VARCHAR(514),
-  created_at timestamp without time zone NOT NULL,
-);
-
-ALTER TABLE ONLY public.posts
-  ADD CONSTRAINT posts_pkey PRIMARY KEY (id);
-
--- users table
-CREATE TABLE public.users (
-  name VARCHAR(34) NOT NULL,
-  id BIGINT NOT NULL AUTO_INCREMENT,
-);
-
-ALTER TABLE ONLY public.users
-  ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
--- comments table
-CREATE TABLE public.comments (
-  user_id BIGINT NOT NULL,
-  content VARCHAR(514),
-  post_id BIGINT NOT NULL AUTO_INCREMENT,
-);
-
-ALTER TABLE ONLY public.comments
-  ADD CONSTRAINT comments_pkey PRIMARY KEY (user_id, post_id);
-
-ALTER TABLE public.posts ADD CONSTRAINT
-  FOREIGN KEY (user_id)
-  REFERENCES public.users(id);
-
-ALTER TABLE public.comments ADD CONSTRAINT
-  FOREIGN KEY (post_id)
-  REFERENCES public.posts(id);
-
-ALTER TABLE public.comments ADD CONSTRAINT
-  FOREIGN KEY (user_id)
-  REFERENCES public.users(id);
+Using file from `./data/simple.sql`:
 ```
-
-### Output
-
-```plantuml
-entity public.posts {
-	* id, PK, uuid 
---
-	* created_at, timestamp without time zone 
-	  description, VARCHAR[514]
-	* name, VARCHAR[34]
-}
-entity public.users {
-	* id, PK, BIGINT  AUTO_INCREMENT
---
-	* name, VARCHAR[34]
-}
-entity public.comments {
-	* post_id, PK, BIGINT  AUTO_INCREMENT
-	* user_id, PK, BIGINT 
---
-	  content, VARCHAR[514]
-}
-public.posts }|--|| public.users
-public.comments }|--|| public.posts
-public.comments }|--|| public.users
+> flower parse --input data/simple.sql --output bin/out.plantuml
 ```
 ![Example output](bin/example.png)
 
