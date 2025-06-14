@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 )
 
-require github.com/texttheater/golang-levenshtein/levenshtein v0.0.0-20200805054039-cae8b0eaed6c // indirect
+require github.com/texttheater/golang-levenshtein/levenshtein v0.0.0-20200805054039-cae8b0eaed6c
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
