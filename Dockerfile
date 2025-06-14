@@ -8,11 +8,9 @@ COPY go.mod go.sum ./
 COPY Makefile ./Makefile
 COPY ./main.go ./main.go
 COPY ./VERSION ./VERSION
-COPY ./WORKSPACE ./WORKSPACE
-COPY ./deps.bzl ./deps.bzl
 COPY ./pkg ./pkg
-COPY ./bin ./bin
+#COPY ./bin ./bin
 
 RUN go mod download
 
-#RUN make build-darwin-amd64
+RUN make build-darwin-amd64
