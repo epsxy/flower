@@ -40,12 +40,12 @@ jobs:
           push: true
           tags: ghcr.io/epsxy/flower:${{ github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=registry
 
       - name: Set image outputs
         run: |
           echo "image=ghcr.io/epsxy/flower:${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          digest=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/epsxy/flower:${{ github.ref_name }})
-          echo "digest=$digest" >> $GITHUB_OUTPUT
+          echo "digest=${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
 
   provenance:
     needs: build
