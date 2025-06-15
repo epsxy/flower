@@ -49,17 +49,14 @@ jobs:
 
   provenance:
     needs: build
-    runs-on: ubuntu-latest
     permissions:
       actions: read
       id-token: write
       packages: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
+    with:
+      image: ${{ needs.build.outputs.image }}
+      digest: ${{ needs.build.outputs.digest }}
+      registry-username: ${{ github.actor }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
     if: startsWith(github.ref, 'refs/tags/')
-    steps:
-      - name: Generate SLSA Provenance
-        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.4.0
-        with:
-          image: ${{ needs.build.outputs.image }}
-          digest: ${{ needs.build.outputs.digest }}
-          registry-username: ${{ github.actor }}
-          registry-password: ${{ secrets.GITHUB_TOKEN }}
