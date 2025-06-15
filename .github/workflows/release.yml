@@ -38,13 +38,13 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ghcr.io/epsxy/flower:${{ github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Set image outputs
         run: |
-          echo "image=ghcr.io/epsxy/flower:${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-          digest=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/epsxy/flower:${GITHUB_REF_NAME})
+          echo "image=ghcr.io/epsxy/flower:${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/epsxy/flower:${{ github.ref_name }})
           echo "digest=$digest" >> $GITHUB_OUTPUT
 
   provenance:
