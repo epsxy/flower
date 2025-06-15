@@ -11,7 +11,7 @@ jobs:
       packages: write
       id-token: write  # for Sigstore OIDC
     outputs:
-      image: ${{ steps.build.outputs.image }}
+      image: ${{ steps.set.outputs.image }}
       digest: ${{ steps.build.outputs.digest }}
 
     steps:
@@ -46,6 +46,11 @@ jobs:
         run: |
           echo "image=ghcr.io/epsxy/flower:${{ github.ref_name }}" >> $GITHUB_OUTPUT
           echo "digest=${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
+
+      - name: Set image output
+        id: set
+        run: |
+          echo "image=ghcr.io/epsxy/flower:${{ github.ref_name }}" >> $GITHUB_OUTPUT
 
   provenance:
     needs: build
