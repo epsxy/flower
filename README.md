@@ -81,6 +81,32 @@ docker run -it <image_id>
 docker exec a7100df87d8b go run main.go -- parse --help
 ```
 
+## Release integrity verification
+
+```
+slsa-verifier verify-image \
+  ghcr.io/epsxy/flower@${IMAGE_DIGEST} \
+  --source-uri github.com/epsxy/flower \
+  --source-tag vX.Y.Z \
+  --builder-id https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
+```
+
+eg:
+
+```bash
+slsa-verifier verify-image \
+  ghcr.io/epsxy/flower@sha256:d7d0e2eba0179515b9b4e5643d92bddea453b2bd6d5c6cc3c0dd499ecaad067f \
+  --source-uri github.com/epsxy/flower \
+  --source-tag v0.0.11 \
+  --builder-id https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
+```
+
+returns
+```
+Verified build using builder "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v2.1.0" at commit a179c6e0d8e00866661af5a9db5dfc3fee273430
+PASSED: SLSA verification passed
+```
+
 # Licence
 
 GNU GPL v3.0
