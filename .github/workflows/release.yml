@@ -58,5 +58,5 @@ jobs:
       image: ${{ needs.build.outputs.image }}
       digest: ${{ needs.build.outputs.digest }}
       registry-username: ${{ github.actor }}
-      registry-password: ${{ secrets.GITHUB_TOKEN }}
+      registry-password: ${{ github.token }}
     if: startsWith(github.ref, 'refs/tags/')
